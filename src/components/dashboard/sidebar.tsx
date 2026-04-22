@@ -3,6 +3,8 @@ import { useSidebarStore } from "@/lib/stores/sidebar";
 import { NavLinks } from "./nav-links";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { LogOut } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 type Props = {
   name: string;
@@ -41,6 +43,13 @@ export function Sidebar({ name, email, initials }: Props) {
             <p className="text-xs text-gray-500 truncate">{email}</p>
           </div>
         )}
+        <button
+          onClick={() => signOut({ callbackUrl: "/sign-in" })}
+          className="shrink-0 text-gray-400 hover:text-gray-700 transition-colors"
+          title="Sign out"
+        >
+          <LogOut size={16} />
+        </button>
       </div>
     </aside>
   );
