@@ -93,3 +93,50 @@ export async function pulseDeleteAction(
     return { error: "Failed to delete pulse" };
   }
 }
+
+export async function pulseEditAction(
+  _prev: PulsesActionState,
+  formData: FormData,
+): Promise<PulsesActionState> {
+  const loggedUser = await getCurrentUser().then((user) => user?.id);
+  if (!loggedUser) return { error: "Unauthorized" };
+
+  const form = Object.fromEntries(formData);
+
+  const pulseId = formData.get("pulseId") as string;
+  if (!pulseId) return { error: "Missing pulse ID" };
+
+  const validationResult = pulsesFormSchema.safeParse(form);
+
+  if (!validationResult.success) {
+    return {
+      form,
+      errors: validationResult.error.flatten().fieldErrors,
+    };
+  }
+  const { title, description, status } = validationResult.data;
+
+  try {
+    const orgId = await getUserOrganization(loggedUser);
+    if (!orgId) {
+      return { error: "User does not belong to an organization" };
+    }
+
+    await db
+      .update(pulsesTable)
+      .set({ title, description, status })
+      .where(eq(pulsesTable.id, pulseId));
+
+    await db.insert(activityLogsTable).values({
+      action: "pulse_updated",
+      message: `Pulse "${title ?? "Unknown"}" was updated`,
+      userId: loggedUser,
+      organizationId: orgId,
+    });
+
+    revalidatePath("/dashboard/pulses");
+    return { success: true };
+  } catch {
+    return { error: "Failed to edit pulse" };
+  }
+}

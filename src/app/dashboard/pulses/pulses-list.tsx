@@ -11,6 +11,7 @@ import {
 import { DeletePulseButton } from "./delete-pulse-button";
 import { CreatePulseDialog } from "./create-pulse-dialog";
 import { useQuery } from "@tanstack/react-query";
+import { EditPulseDialog } from "./edit-pulse-dialog";
 const statusColor = {
   active: "bg-green-100 text-green-700",
   completed: "bg-blue-100 text-blue-700",
@@ -72,7 +73,8 @@ export default function PulsesList({ initialData }: { initialData: Pulse[] }) {
                   {pulse.status}
                 </Badge>
                 <CardTitle className="text-base mt-2">{pulse.title}</CardTitle>
-                <CardAction>
+                <CardAction className="flex items-center gap-2">
+                  <EditPulseDialog {...pulse} />
                   <DeletePulseButton pulseId={pulse.id} />
                 </CardAction>
               </CardHeader>
