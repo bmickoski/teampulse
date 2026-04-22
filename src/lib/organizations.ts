@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { membershipsTable, usersTable } from "@/db/schema";
+import { membershipsTable, organizationsTable, usersTable } from "@/db/schema";
 import { count, eq } from "drizzle-orm";
 import { getCurrentUser } from "./auth";
 
@@ -10,6 +10,14 @@ export async function getUserOrganization(userId: string) {
     .where(eq(membershipsTable.userId, userId))
     .then((r) => r[0]);
   return membership?.organizationId ?? null;
+}
+
+export async function getOrganization(orgId: string) {
+  return db
+    .select()
+    .from(organizationsTable)
+    .where(eq(organizationsTable.id, orgId))
+    .then((r) => r[0] ?? null);
 }
 
 export async function getCurrentUserWithOrg() {

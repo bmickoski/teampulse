@@ -7,6 +7,8 @@ import {
 } from "../validations/organizations";
 import { membershipsTable, organizationsTable } from "@/db/schema";
 import { getCurrentUser } from "../auth";
+import { eq } from "drizzle-orm/sql/expressions/conditions";
+import { getCurrentUserWithOrg } from "../organizations";
 
 export async function organizationsAction(
   _prev: OrganizationsActionState,
@@ -48,4 +50,44 @@ export async function organizationsAction(
   }
 
   redirect("/dashboard");
+}
+
+export async function updateOrganizationAction(
+  _prev: OrganizationsActionState,
+  formData: FormData,
+): Promise<OrganizationsActionState> {
+  const ctx = await getCurrentUserWithOrg();
+  const orgId = ctx?.orgId;
+  const user = ctx?.user.id;
+  if (!user) {
+    return {
+      error: "Unauthorized",
+    };
+  }
+
+  const form = Object.fromEntries(formData);
+  const validationResult = organizationsFormSchema.safeParse(form);
+
+  if (!validationResult.success) {
+    return {
+      form,
+      errors: validationResult.error.flatten().fieldErrors,
+    };
+  }
+  const { name, slug } = validationResult.data;
+
+  try {
+    await db
+      .update(organizationsTable)
+      .set({ name, slug })
+      .where(eq(organizationsTable.id, orgId ?? ""));
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    if (message.includes("unique") || message.includes("duplicate")) {
+      return { errors: { slug: ["Slug already in use"] } };
+    }
+    return { error: message };
+  }
+
+  redirect("/dashboard/settings");
 }

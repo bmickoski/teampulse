@@ -24,4 +24,5 @@ export type OrganizationsActionState = {
     slug?: string[];
   };
   error?: string;
+  success?: boolean;
 };
