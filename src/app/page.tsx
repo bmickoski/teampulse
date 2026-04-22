@@ -1,65 +1,86 @@
-import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function Home() {
+const features = [
+  {
+    title: "Teams",
+    description: "Create organizations, invite teammates, and manage roles — all in one place.",
+    icon: "👥",
+  },
+  {
+    title: "Pulses",
+    description: "Track projects with tasks and time logs. Know what's moving and what's stuck.",
+    icon: "⚡",
+  },
+  {
+    title: "Metrics",
+    description: "Visualize team output over time. Spot trends before they become problems.",
+    icon: "📊",
+  },
+];
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen flex flex-col bg-white">
+      <header className="px-6 py-4 border-b flex items-center justify-between">
+        <span className="font-bold text-lg tracking-tight">TeamPulse</span>
+        <div className="flex items-center gap-3">
+          <a href="/sign-in">
+            <Button variant="ghost" size="sm">Sign in</Button>
+          </a>
+          <a href="/sign-up">
+            <Button size="sm">Get started</Button>
+          </a>
+        </div>
+      </header>
+
+      <main className="flex-1">
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100 via-white to-white" />
+          <div className="max-w-3xl mx-auto px-6 py-28 text-center">
+            <Badge variant="secondary" className="mb-6">Now in beta</Badge>
+            <h1 className="text-6xl font-extrabold tracking-tight text-gray-900 mb-5 leading-tight">
+              Your team,{" "}
+              <span className="text-indigo-600">in sync</span>
+            </h1>
+            <p className="text-xl text-gray-500 mb-10 max-w-xl mx-auto">
+              TeamPulse gives your team a shared view of what matters — projects, progress, and people.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <a href="/sign-up">
+                <Button size="lg" className="px-8">Get started for free</Button>
+              </a>
+              <a href="/sign-in">
+                <Button size="lg" variant="outline" className="px-8">Sign in</Button>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section className="max-w-5xl mx-auto px-6 pb-28">
+          <p className="text-center text-sm font-medium text-gray-400 uppercase tracking-widest mb-10">
+            Everything your team needs
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {features.map((feature) => (
+              <Card key={feature.title} className="border-gray-200 shadow-none hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="text-3xl mb-2">{feature.icon}</div>
+                  <CardTitle className="text-base">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-500">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
       </main>
+
+      <footer className="px-6 py-5 border-t text-center text-sm text-gray-400">
+        &copy; {new Date().getFullYear()} TeamPulse — Built to ship
+      </footer>
     </div>
   );
 }
