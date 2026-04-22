@@ -38,7 +38,7 @@ export default function ProfileSettings({ name }: { name: string }) {
           id="name"
           name="name"
           required
-          placeholder="e.g. Q2 Website Redesign"
+          placeholder="e.g. John Doe"
           defaultValue={name}
         />
         {state.errors?.name && (

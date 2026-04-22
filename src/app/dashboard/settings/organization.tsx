@@ -54,7 +54,7 @@ export default function OrganizationSettings({
           id="name"
           name="name"
           required
-          placeholder="e.g. Q2 Website Redesign"
+          placeholder="e.g. Acme Corp"
           defaultValue={name}
           onChange={handleNameChange}
         />
