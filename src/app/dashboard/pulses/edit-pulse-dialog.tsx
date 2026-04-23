@@ -1,7 +1,6 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useRef, useState } from "react";
 import { pulseEditAction } from "@/lib/actions/pulses";
-import { type PulsesActionState } from "@/lib/validations/pulses";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil } from "lucide-react";
 import {
   Select,
@@ -31,26 +30,43 @@ type Pulse = {
 
 export function EditPulseDialog({ id, title, description, status }: Pulse) {
   const [open, setOpen] = useState(false);
-  const [state, setState] = useState<PulsesActionState>({});
-  const [isPending, startTransition] = useTransition();
   const queryClient = useQueryClient();
+  const formRef = useRef<HTMLFormElement>(null);
 
-  function handleSubmit(formData: FormData) {
-    startTransition(async () => {
-      const result = await pulseEditAction(state, formData);
-      setState(result);
-      if (result.success) {
-        setOpen(false);
-        setState({});
-        queryClient.invalidateQueries({ queryKey: ["pulses"] });
-      }
-    });
-  }
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (formData: FormData) => {
+      return pulseEditAction({}, formData);
+    },
 
-  function handleOpenChange(next: boolean) {
-    setOpen(next);
-    if (!next) setState({});
-  }
+    onMutate: async (formData: FormData) => {
+      const newTitle = formData.get("title") as string;
+      const newDescription = formData.get("description") as string;
+      const newStatus = formData.get("status") as string;
+
+      await queryClient.cancelQueries({ queryKey: ["pulses"] });
+
+      const previous = queryClient.getQueryData(["pulses"]);
+      queryClient.setQueryData(["pulses"], (old: Pulse[]) =>
+        old.map((p) =>
+          p.id === id
+            ? {
+                ...p,
+                title: newTitle,
+                description: newDescription,
+                status: newStatus,
+              }
+            : p,
+        ),
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      queryClient.setQueryData(["pulses"], context?.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["pulses"] });
+    },
+  });
 
   return (
     <>
@@ -58,19 +74,13 @@ export function EditPulseDialog({ id, title, description, status }: Pulse) {
         <Pencil />
       </Button>
 
-      <Dialog open={open} onOpenChange={handleOpenChange}>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit pulse</DialogTitle>
           </DialogHeader>
 
-          <form action={handleSubmit} className="space-y-4 mt-2">
-            {state.error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                {state.error}
-              </div>
-            )}
-
+          <form ref={formRef} className="space-y-4 mt-2">
             <input type="hidden" name="pulseId" value={id} />
 
             <div className="space-y-1.5">
@@ -82,9 +92,6 @@ export function EditPulseDialog({ id, title, description, status }: Pulse) {
                 placeholder="e.g. Q2 Website Redesign"
                 defaultValue={title}
               />
-              {state.errors?.title && (
-                <p className="text-xs text-red-600">{state.errors.title[0]}</p>
-              )}
             </div>
 
             <div className="space-y-1.5">
@@ -116,11 +123,19 @@ export function EditPulseDialog({ id, title, description, status }: Pulse) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => handleOpenChange(false)}
+                onClick={() => setOpen(false)}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button
+                type="button"
+                onClick={() => {
+                  const formData = new FormData(formRef.current!);
+                  mutate(formData);
+                  setOpen(false);
+                }}
+                disabled={isPending}
+              >
                 {isPending ? "Updating..." : "Update"}
               </Button>
             </div>

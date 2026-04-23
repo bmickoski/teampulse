@@ -2,36 +2,49 @@
 
 import { Button } from "@/components/ui/button";
 import { pulseDeleteAction } from "@/lib/actions/pulses";
-import { PulsesActionState } from "@/lib/validations/pulses";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState, useTransition } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+type Pulse = {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+};
 
 export function DeletePulseButton({ pulseId }: { pulseId: string }) {
-  const [state, setState] = useState<PulsesActionState>({});
-  const [isPending, startTransition] = useTransition();
   const queryClient = useQueryClient();
 
-  function handleSubmit(formData: FormData) {
-    startTransition(async () => {
-      const result = await pulseDeleteAction(state, formData);
-      if (result.success) {
-        setState({});
-        queryClient.invalidateQueries({ queryKey: ["pulses"] });
-      }
-    });
-  }
+  const { mutate, isPending } = useMutation({
+    mutationFn: async () => {
+      const formData = new FormData();
+      formData.append("pulseId", pulseId);
+      return pulseDeleteAction({}, formData);
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["pulses"] });
+
+      const previous = queryClient.getQueryData(["pulses"]);
+      queryClient.setQueryData(["pulses"], (old: Pulse[]) =>
+        old.filter((p) => p.id !== pulseId),
+      );
+      return { previous }; // returned as context
+    },
+    onError: (_err, _vars, context) => {
+      queryClient.setQueryData(["pulses"], context?.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["pulses"] });
+    },
+  });
 
   return (
-    <form action={handleSubmit}>
-      <input type="hidden" name="pulseId" value={pulseId} />
-
-      <Button type="submit" variant="destructive" disabled={isPending}>
-        {isPending ? "Deleting..." : "X"}
-      </Button>
-
-      {state?.error ? (
-        <p className="mt-1 text-xs text-red-500">{state.error}</p>
-      ) : null}
-    </form>
+    <Button
+      type="button"
+      onClick={() => mutate()}
+      variant="destructive"
+      disabled={isPending}
+    >
+      {isPending ? "Deleting..." : "X"}
+    </Button>
   );
 }
