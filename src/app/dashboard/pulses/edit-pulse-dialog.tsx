@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { pulseEditAction } from "@/lib/actions/pulses";
 import { pulsesFormSchema, type PulsesFormValues } from "@/lib/validations/pulses";
 import {
@@ -65,6 +66,10 @@ export function EditPulseDialog({ id, title, description, status }: Pulse) {
     },
     onError: (_err, _vars, context) => {
       queryClient.setQueryData(["pulses"], context?.previous);
+      toast.error("Failed to update pulse.");
+    },
+    onSuccess: () => {
+      toast.success("Pulse updated.");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["pulses"] });

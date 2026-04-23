@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,12 +15,9 @@ export default function OrganizationSettings({
   name: string;
   defaultSlug: string;
 }) {
-  const [success, setSuccess] = useState(false);
-
   const {
     register,
     handleSubmit,
-    setError,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<OrganizationsFormValues>({
@@ -42,26 +39,12 @@ export default function OrganizationSettings({
     formData.append("slug", data.slug);
     const result = await updateOrganizationAction({}, formData);
     if (result.error) {
-      setSuccess(false);
-      setError("root", { message: result.error });
-    } else {
-      setSuccess(true);
+      toast.error(result.error);
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
-      {errors.root && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          {errors.root.message}
-        </div>
-      )}
-      {success && (
-        <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
-          Organization updated successfully.
-        </div>
-      )}
-
       <div className="space-y-1.5">
         <Label htmlFor="name">Name</Label>
         <Input
@@ -76,11 +59,7 @@ export default function OrganizationSettings({
 
       <div className="space-y-1.5">
         <Label htmlFor="slug">Slug</Label>
-        <Input
-          id="slug"
-          placeholder="e.g. acme-corp"
-          {...register("slug")}
-        />
+        <Input id="slug" placeholder="e.g. acme-corp" {...register("slug")} />
         {errors.slug && (
           <p className="mt-1.5 text-xs text-red-600">{errors.slug.message}</p>
         )}

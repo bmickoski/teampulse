@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +21,6 @@ export function InviteMemberDialog() {
   const {
     register,
     handleSubmit,
-    setError,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<InviteMemberFormValues>({
@@ -37,9 +37,10 @@ export function InviteMemberDialog() {
     formData.append("email", data.email);
     const result = await inviteMemberAction({}, formData);
     if (result.error) {
-      setError("root", { message: result.error });
+      toast.error(result.error);
     } else {
       handleOpenChange(false);
+      toast.success(`Invitation sent to ${data.email}.`);
     }
   };
 
@@ -54,12 +55,6 @@ export function InviteMemberDialog() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
-            {errors.root && (
-              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                {errors.root.message}
-              </div>
-            )}
-
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <Input

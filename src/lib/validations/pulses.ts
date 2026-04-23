@@ -5,7 +5,7 @@ const statusEnum = z.enum(["active", "completed", "archived"]);
 export const pulsesFormSchema = z.object({
   title: z.string().min(2, { message: "Pulse title must be at least 2 characters long" }).trim(),
   description: z.string().optional(),
-  status: statusEnum.default("active"),
+  status: statusEnum.optional(),
 });
 
 export type PulsesFormValues = z.infer<typeof pulsesFormSchema>;

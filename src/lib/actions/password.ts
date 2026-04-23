@@ -1,7 +1,6 @@
 "use server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { getCurrentUser } from "../auth";
 import {
   updatePasswordActionState,
   updatePasswordSchema,

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { pulsesAction } from "@/lib/actions/pulses";
 import { pulsesFormSchema, type PulsesFormValues } from "@/lib/validations/pulses";
 import {
@@ -22,7 +23,6 @@ export function CreatePulseDialog() {
   const {
     register,
     handleSubmit,
-    setError,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<PulsesFormValues>({
@@ -40,10 +40,11 @@ export function CreatePulseDialog() {
     if (data.description) formData.append("description", data.description);
     const result = await pulsesAction({}, formData);
     if (result.error) {
-      setError("root", { message: result.error });
+      toast.error(result.error);
     } else {
       handleOpenChange(false);
       queryClient.invalidateQueries({ queryKey: ["pulses"] });
+      toast.success("Pulse created.");
     }
   };
 
@@ -58,12 +59,6 @@ export function CreatePulseDialog() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
-            {errors.root && (
-              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                {errors.root.message}
-              </div>
-            )}
-
             <div className="space-y-1.5">
               <Label htmlFor="title">Title</Label>
               <Input
