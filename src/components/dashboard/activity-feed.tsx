@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 type ActivityLog = {
   id: string;
@@ -9,18 +10,22 @@ type ActivityLog = {
   createdAt: string;
 };
 
-async function fetchActivity(): Promise<ActivityLog[]> {
-  const res = await fetch("/api/activity");
-  if (!res.ok) throw new Error("Failed to fetch activity");
-  return res.json();
-}
-
 export function ActivityFeed() {
-  const { data: logs = [] } = useQuery({
-    queryKey: ["activity"],
-    queryFn: fetchActivity,
-    refetchInterval: 5000, // this is the entire polling config
-  });
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
+
+  useEffect(() => {
+    const eventSource = new EventSource("/api/activity/stream");
+    eventSource.onmessage = (event) => {
+      const newLogs: ActivityLog[] = JSON.parse(event.data);
+      setLogs(newLogs);
+    };
+    eventSource.onerror = () => {
+      eventSource.close();
+    };
+    return () => {
+      eventSource.close();
+    };
+  }, []);
 
   if (logs.length === 0)
     return (
