@@ -4,15 +4,12 @@ import { activityLogsTable, membershipsTable, usersTable } from "@/db/schema";
 import { revalidatePath } from "next/cache";
 import { getCurrentUserWithOrg } from "../organizations";
 import { and, eq } from "drizzle-orm";
-import {
-  InviteTeamActionState,
-  inviteTeamMemberSchema,
-} from "../validations/team";
+import { TeamActionState, inviteTeamMemberSchema } from "../validations/team";
 
 export async function inviteMemberAction(
-  _prev: InviteTeamActionState,
+  _prev: TeamActionState,
   formData: FormData,
-): Promise<InviteTeamActionState> {
+): Promise<TeamActionState> {
   const ctx = await getCurrentUserWithOrg();
   if (!ctx) {
     return {
@@ -77,5 +74,89 @@ export async function inviteMemberAction(
     return { success: true };
   } catch {
     return { error: "An error occurred while inviting the member" };
+  }
+}
+
+export async function removeMemberAction(
+  _prev: TeamActionState,
+  formData: FormData,
+): Promise<TeamActionState> {
+  const ctx = await getCurrentUserWithOrg();
+  if (!ctx) {
+    return {
+      error: "Unauthorized",
+    };
+  }
+  const orgId = ctx.orgId;
+  const userId = ctx.user.id;
+
+  const currentUserMembership= await db
+    .select({ role: membershipsTable.role })
+    .from(membershipsTable)
+    .where(
+      and(
+        eq(membershipsTable.organizationId, orgId),
+        eq(membershipsTable.userId, userId ?? ""),
+      ),
+    );
+
+  if (
+    currentUserMembership.length === 0 ||
+    currentUserMembership[0].role !== "owner"
+  ) {
+    return { error: "Only the organization owner can remove members" };
+  }
+
+  const memberId = formData.get("memberId") as string;
+
+  if (!memberId) {
+    return { error: "Member ID is required" };
+  }
+
+  const memberRecord = await db
+    .select({
+      role: membershipsTable.role,
+      name: usersTable.name,
+    })
+    .from(membershipsTable)
+    .innerJoin(usersTable, eq(membershipsTable.userId, usersTable.id))
+    .where(
+      and(
+        eq(membershipsTable.organizationId, orgId),
+        eq(membershipsTable.userId, memberId),
+      ),
+    )
+    .then((rows) => rows[0]);
+
+  if (!memberRecord) {
+    return { error: "User is not a member of this organization" };
+  }
+
+  if (memberRecord.role === "owner") {
+    return { error: "The organization owner cannot be removed" };
+  }
+
+  // remove from membership table with role member
+  try {
+    await db
+      .delete(membershipsTable)
+      .where(
+        and(
+          eq(membershipsTable.organizationId, orgId),
+          eq(membershipsTable.userId, memberId),
+        ),
+      );
+
+    await db.insert(activityLogsTable).values({
+      action: "member_removed",
+      message: `Member "${memberRecord.name}" was removed from the organization`,
+      userId,
+      organizationId: orgId,
+    });
+
+    revalidatePath("/dashboard/team");
+    return { success: true };
+  } catch {
+    return { error: "An error occurred while removing the member" };
   }
 }

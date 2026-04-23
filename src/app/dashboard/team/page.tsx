@@ -1,5 +1,6 @@
 import { getOrgMembers } from "@/lib/organizations";
 import { InviteMemberDialog } from "./invite-member-form";
+import { RemoveMemberButton } from "./remove-member-form";
 
 export default async function TeamPage() {
   const members = await getOrgMembers();
@@ -27,9 +28,17 @@ export default async function TeamPage() {
               <p className="font-medium text-gray-900">{member.name}</p>
               <p className="text-sm text-gray-500">{member.email}</p>
             </div>
-            <span className="text-xs font-medium px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 capitalize">
-              {member.role}
-            </span>
+            <div className="flex flex-col items-end gap-2">
+              <span className="text-xs font-medium px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 capitalize">
+                {member.role}
+              </span>
+              <RemoveMemberButton
+                memberId={member.userId}
+                memberName={member.name}
+                memberEmail={member.email}
+                memberRole={member.role}
+              />
+            </div>
           </div>
         ))}
       </div>

@@ -7,19 +7,33 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { TeamActionState } from "@/lib/validations/team";
-import { inviteMemberAction } from "@/lib/actions/team";
+import { removeMemberAction } from "@/lib/actions/team";
 
-export function InviteMemberDialog() {
+type RemoveMemberButtonProps = {
+  memberName: string;
+  memberEmail: string;
+  memberId: string;
+  memberRole: string;
+};
+
+export function RemoveMemberButton({
+  memberId,
+  memberName,
+  memberEmail,
+  memberRole,
+}: RemoveMemberButtonProps) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<TeamActionState>({});
   const [isPending, startTransition] = useTransition();
 
+  if (memberRole === "owner") {
+    return null;
+  }
+
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      const result = await inviteMemberAction(state, formData);
+      const result = await removeMemberAction(state, formData);
       setState(result);
       if (result.success) {
         setOpen(false);
@@ -35,12 +49,19 @@ export function InviteMemberDialog() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Invite member</Button>
+      <Button
+        variant="destructive"
+        size="xs"
+        type="button"
+        onClick={() => setOpen(true)}
+      >
+        Remove
+      </Button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Invite member by given email</DialogTitle>
+            <DialogTitle>Remove team member</DialogTitle>
           </DialogHeader>
 
           <form action={handleSubmit} className="space-y-4 mt-2">
@@ -50,19 +71,14 @@ export function InviteMemberDialog() {
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                required
-                placeholder="e.g. john.doe@example.com"
-              />
-              {state.errors?.email && (
-                <p className="text-xs text-red-600">{state.errors.email[0]}</p>
-              )}
-            </div>
+            <input type="hidden" name="memberId" value={memberId} />
+
+            <p className="text-sm text-gray-600">
+              Are you sure you want to remove{" "}
+              <span className="font-medium text-gray-900">{memberName}</span>{" "}
+              from the team?
+            </p>
+            <p className="text-xs text-gray-500">{memberEmail}</p>
 
             <div className="flex justify-end gap-2 pt-2">
               <Button
@@ -72,8 +88,8 @@ export function InviteMemberDialog() {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Inviting..." : "Invite"}
+              <Button type="submit" variant="destructive" disabled={isPending}>
+                {isPending ? "Removing..." : "Remove"}
               </Button>
             </div>
           </form>
