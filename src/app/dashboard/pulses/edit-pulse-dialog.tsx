@@ -1,6 +1,9 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { pulseEditAction } from "@/lib/actions/pulses";
+import { pulsesFormSchema, type PulsesFormValues } from "@/lib/validations/pulses";
 import {
   Dialog,
   DialogContent,
@@ -31,29 +34,29 @@ type Pulse = {
 export function EditPulseDialog({ id, title, description, status }: Pulse) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
-  const formRef = useRef<HTMLFormElement>(null);
+
+  const { register, handleSubmit, control, reset } = useForm<PulsesFormValues>({
+    resolver: zodResolver(pulsesFormSchema),
+    defaultValues: { title, description: description ?? "", status: status as PulsesFormValues["status"] },
+  });
+
+  useEffect(() => {
+    if (open) reset({ title, description: description ?? "", status: status as PulsesFormValues["status"] });
+  }, [open, title, description, status, reset]);
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (formData: FormData) => {
-      return pulseEditAction({}, formData);
-    },
-
+    mutationFn: async (formData: FormData) => pulseEditAction({}, formData),
     onMutate: async (formData: FormData) => {
-      const newTitle = formData.get("title") as string;
-      const newDescription = formData.get("description") as string;
-      const newStatus = formData.get("status") as string;
-
       await queryClient.cancelQueries({ queryKey: ["pulses"] });
-
       const previous = queryClient.getQueryData(["pulses"]);
       queryClient.setQueryData(["pulses"], (old: Pulse[]) =>
         old.map((p) =>
           p.id === id
             ? {
                 ...p,
-                title: newTitle,
-                description: newDescription,
-                status: newStatus,
+                title: formData.get("title") as string,
+                description: formData.get("description") as string,
+                status: formData.get("status") as string,
               }
             : p,
         ),
@@ -68,6 +71,16 @@ export function EditPulseDialog({ id, title, description, status }: Pulse) {
     },
   });
 
+  const onSubmit = (data: PulsesFormValues) => {
+    const formData = new FormData();
+    formData.append("pulseId", id);
+    formData.append("title", data.title);
+    formData.append("description", data.description ?? "");
+    formData.append("status", data.status);
+    mutate(formData);
+    setOpen(false);
+  };
+
   return (
     <>
       <Button variant="outline" size="icon" onClick={() => setOpen(true)}>
@@ -80,17 +93,13 @@ export function EditPulseDialog({ id, title, description, status }: Pulse) {
             <DialogTitle>Edit pulse</DialogTitle>
           </DialogHeader>
 
-          <form ref={formRef} className="space-y-4 mt-2">
-            <input type="hidden" name="pulseId" value={id} />
-
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
             <div className="space-y-1.5">
               <Label htmlFor="title">Title</Label>
               <Input
                 id="title"
-                name="title"
-                required
                 placeholder="e.g. Q2 Website Redesign"
-                defaultValue={title}
+                {...register("title")}
               />
             </div>
 
@@ -98,44 +107,39 @@ export function EditPulseDialog({ id, title, description, status }: Pulse) {
               <Label htmlFor="description">Description</Label>
               <textarea
                 id="description"
-                name="description"
                 rows={3}
                 placeholder="What is this pulse about?"
-                defaultValue={description ?? ""}
                 className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                {...register("description")}
               />
             </div>
+
             <div className="space-y-1.5">
-              <Select key={status} name="status" defaultValue={status}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Choose status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="status"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Choose status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="archived">Archived</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
+
             <div className="flex justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpen(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button
-                type="button"
-                onClick={() => {
-                  const formData = new FormData(formRef.current!);
-                  mutate(formData);
-                  setOpen(false);
-                }}
-                disabled={isPending}
-              >
+              <Button type="submit" disabled={isPending}>
                 {isPending ? "Updating..." : "Update"}
               </Button>
             </div>

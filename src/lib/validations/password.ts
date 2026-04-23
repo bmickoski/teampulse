@@ -30,3 +30,5 @@ export type updatePasswordActionState = {
   error?: string;
   success?: boolean;
 };
+
+export type updatePasswordFormValues = z.infer<typeof updatePasswordSchema>;

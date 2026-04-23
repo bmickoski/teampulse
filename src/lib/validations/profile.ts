@@ -7,6 +7,8 @@ export const profileFormSchema = z.object({
     .trim(),
 });
 
+export type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
 export type ProfileActionState = {
   form?: {
     name?: string;

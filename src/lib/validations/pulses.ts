@@ -8,6 +8,8 @@ export const pulsesFormSchema = z.object({
   status: statusEnum.default("active"),
 });
 
+export type PulsesFormValues = z.infer<typeof pulsesFormSchema>;
+
 export type PulsesActionState = {
   form?: {
     title?: string;

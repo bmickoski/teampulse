@@ -1,34 +1,48 @@
 "use client";
-
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { profileEditAction } from "@/lib/actions/profile";
-import { ProfileActionState } from "@/lib/validations/profile";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState, useTransition } from "react";
+import { profileFormSchema, type ProfileFormValues } from "@/lib/validations/profile";
 
 export default function ProfileSettings({ name }: { name: string }) {
-  const [state, setState] = useState<ProfileActionState>({});
-  const [isPending, startTransition] = useTransition();
-  const queryClient = useQueryClient();
+  const [success, setSuccess] = useState(false);
 
-  function handleSubmit(formData: FormData) {
-    startTransition(async () => {
-      const result = await profileEditAction(state, formData);
-      setState(result);
-      if (result.success) {
-        setState({});
-        queryClient.invalidateQueries({ queryKey: ["settings"] });
-      }
-    });
-  }
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: { name },
+  });
+
+  const onSubmit = async (data: ProfileFormValues) => {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    const result = await profileEditAction({}, formData);
+    if (result.error) {
+      setSuccess(false);
+      setError("root", { message: result.error });
+    } else {
+      setSuccess(true);
+    }
+  };
 
   return (
-    <form action={handleSubmit} className="space-y-4 mt-2">
-      {state.error && (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
+      {errors.root && (
         <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          {state.error}
+          {errors.root.message}
+        </div>
+      )}
+      {success && (
+        <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+          Profile updated successfully.
         </div>
       )}
 
@@ -36,18 +50,17 @@ export default function ProfileSettings({ name }: { name: string }) {
         <Label htmlFor="name">Name</Label>
         <Input
           id="name"
-          name="name"
-          required
           placeholder="e.g. John Doe"
-          defaultValue={name}
+          {...register("name")}
         />
-        {state.errors?.name && (
-          <p className="text-xs text-red-600">{state.errors.name[0]}</p>
+        {errors.name && (
+          <p className="text-xs text-red-600">{errors.name.message}</p>
         )}
       </div>
+
       <div className="flex justify-end gap-2 pt-2">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "Updating..." : "Update"}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Updating..." : "Update"}
         </Button>
       </div>
     </form>

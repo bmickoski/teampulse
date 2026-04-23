@@ -14,6 +14,8 @@ export const organizationsFormSchema = z.object({
     .trim(),
 });
 
+export type OrganizationsFormValues = z.infer<typeof organizationsFormSchema>;
+
 export type OrganizationsActionState = {
   form?: {
     name?: string;

@@ -1,10 +1,29 @@
 "use client";
-import { useActionState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpAction } from "@/lib/actions/auth";
-import type { SignUpActionState } from "@/lib/validations/auth";
+import { signUpFormSchema, type SignUpFormValues } from "@/lib/validations/auth";
 
 export default function SignUpPage() {
-  const [state, formAction] = useActionState<SignUpActionState, FormData>(signUpAction, {});
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<SignUpFormValues>({
+    resolver: zodResolver(signUpFormSchema),
+  });
+
+  const onSubmit = async (data: SignUpFormValues) => {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+    const result = await signUpAction({}, formData);
+    if (result?.errors?.email) {
+      setError("email", { message: result.errors.email[0] });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -14,7 +33,7 @@ export default function SignUpPage() {
           <p className="text-sm text-gray-500 mt-1">{"Start tracking your team's pulse"}</p>
         </div>
 
-        <form action={formAction} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
               Name
@@ -22,13 +41,12 @@ export default function SignUpPage() {
             <input
               id="name"
               type="text"
-              name="name"
-              required
               placeholder="Jane Smith"
               className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              {...register("name")}
             />
-            {state.errors?.name && (
-              <p className="mt-1.5 text-xs text-red-600">{state.errors.name[0]}</p>
+            {errors.name && (
+              <p className="mt-1.5 text-xs text-red-600">{errors.name.message}</p>
             )}
           </div>
 
@@ -39,14 +57,13 @@ export default function SignUpPage() {
             <input
               id="email"
               type="email"
-              name="email"
-              required
               autoComplete="email"
               placeholder="you@company.com"
               className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              {...register("email")}
             />
-            {state.errors?.email && (
-              <p className="mt-1.5 text-xs text-red-600">{state.errors.email[0]}</p>
+            {errors.email && (
+              <p className="mt-1.5 text-xs text-red-600">{errors.email.message}</p>
             )}
           </div>
 
@@ -57,22 +74,22 @@ export default function SignUpPage() {
             <input
               id="password"
               type="password"
-              name="password"
-              required
               autoComplete="new-password"
               placeholder="••••••••"
               className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              {...register("password")}
             />
-            {state.errors?.password && (
-              <p className="mt-1.5 text-xs text-red-600">{state.errors.password[0]}</p>
+            {errors.password && (
+              <p className="mt-1.5 text-xs text-red-600">{errors.password.message}</p>
             )}
           </div>
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+            disabled={isSubmitting}
+            className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-60"
           >
-            Create account
+            {isSubmitting ? "Creating account..." : "Create account"}
           </button>
         </form>
 

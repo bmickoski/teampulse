@@ -1,56 +1,70 @@
 "use client";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { updatePasswordAction } from "@/lib/actions/password";
-import { updatePasswordActionState } from "@/lib/validations/password";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState, useTransition } from "react";
+import {
+  updatePasswordFormValues,
+  updatePasswordSchema,
+} from "@/lib/validations/password";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 export default function PasswordChange() {
-  const [state, setState] = useState<updatePasswordActionState>({});
-  const [isPending, startTransition] = useTransition();
-  const queryClient = useQueryClient();
+  const [success, setSuccess] = useState(false);
 
-  function handleSubmit(formData: FormData) {
-    startTransition(async () => {
-      const result = await updatePasswordAction(state, formData);
-      setState(result);
-      if (result.success) {
-        setState({});
-        queryClient.invalidateQueries({ queryKey: ["settings"] });
-      }
-    });
-  }
+  const {
+    register,
+    handleSubmit,
+    setError,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<updatePasswordFormValues>({
+    resolver: zodResolver(updatePasswordSchema),
+  });
+
+  const onSubmit = async (data: updatePasswordFormValues) => {
+    const formData = new FormData();
+    formData.append("currentPassword", data.currentPassword);
+    formData.append("password", data.password);
+    formData.append("confirmPassword", data.confirmPassword);
+    const result = await updatePasswordAction({}, formData);
+    if (result?.error) {
+      setSuccess(false);
+      setError("root", { message: result.error });
+    } else {
+      reset();
+      setSuccess(true);
+    }
+  };
 
   return (
-    <form action={handleSubmit} className="space-y-5">
-      {state.error && (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      {errors.root && (
         <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          {state.error}
+          {errors.root.message}
+        </div>
+      )}
+      {success && (
+        <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+          Password updated successfully.
         </div>
       )}
 
       <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Current password
-          </label>
-        </div>
+        <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
+          Current password
+        </label>
         <Input
-          id="password"
+          id="currentPassword"
           type="password"
-          name="currentPassword"
-          required
           autoComplete="current-password"
           placeholder="••••••••"
           className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          {...register("currentPassword")}
         />
-        {state.errors?.currentPassword && (
-          <p className="text-xs text-red-600">
-            {state.errors.currentPassword[0]}
+        {errors.currentPassword && (
+          <p className="mt-1.5 text-xs text-red-600">
+            {errors.currentPassword.message}
           </p>
         )}
       </div>
@@ -67,14 +81,15 @@ export default function PasswordChange() {
         <Input
           id="new-password"
           type="password"
-          name="password"
-          required
           autoComplete="new-password"
           placeholder="••••••••"
           className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          {...register("password")}
         />
-        {state.errors?.password && (
-          <p className="text-xs text-red-600">{state.errors.password[0]}</p>
+        {errors.password && (
+          <p className="mt-1.5 text-xs text-red-600">
+            {errors.password.message}
+          </p>
         )}
       </div>
 
@@ -90,23 +105,26 @@ export default function PasswordChange() {
         <Input
           id="confirm-new-password"
           type="password"
-          name="confirmPassword"
-          required
           autoComplete="confirm-new-password"
           placeholder="••••••••"
           className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          {...register("confirmPassword")}
         />
-        {state.errors?.confirmPassword && (
-          <p className="text-xs text-red-600">
-            {state.errors.confirmPassword[0]}
+        {errors.confirmPassword && (
+          <p className="mt-1.5 text-xs text-red-600">
+            {errors.confirmPassword.message}
           </p>
         )}
       </div>
 
       <div className="flex justify-end gap-2 pt-2">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "Updating..." : "Update"}
-        </Button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-60"
+        >
+          {isSubmitting ? "Updating..." : "Update"}
+        </button>
       </div>
     </form>
   );

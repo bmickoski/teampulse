@@ -1,12 +1,12 @@
 "use client";
-
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateOrganizationAction } from "@/lib/actions/organizations";
-import { OrganizationsActionState } from "@/lib/validations/organizations";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState, useTransition } from "react";
+import { organizationsFormSchema, type OrganizationsFormValues } from "@/lib/validations/organizations";
 
 export default function OrganizationSettings({
   name,
@@ -15,36 +15,50 @@ export default function OrganizationSettings({
   name: string;
   defaultSlug: string;
 }) {
-  const [state, setState] = useState<OrganizationsActionState>({});
-  const [slug, setSlug] = useState(defaultSlug);
-  const [isPending, startTransition] = useTransition();
-  const queryClient = useQueryClient();
+  const [success, setSuccess] = useState(false);
 
-  function handleSubmit(formData: FormData) {
-    startTransition(async () => {
-      const result = await updateOrganizationAction(state, formData);
-      setState(result);
-      if (result.success) {
-        setState({});
-        queryClient.invalidateQueries({ queryKey: ["settings"] });
-      }
-    });
-  }
+  const {
+    register,
+    handleSubmit,
+    setError,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<OrganizationsFormValues>({
+    resolver: zodResolver(organizationsFormSchema),
+    defaultValues: { name, slug: defaultSlug },
+  });
 
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSlug(
-      e.target.value
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, ""),
-    );
+    const slug = e.target.value
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    setValue("slug", slug, { shouldValidate: true });
   }
 
+  const onSubmit = async (data: OrganizationsFormValues) => {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("slug", data.slug);
+    const result = await updateOrganizationAction({}, formData);
+    if (result.error) {
+      setSuccess(false);
+      setError("root", { message: result.error });
+    } else {
+      setSuccess(true);
+    }
+  };
+
   return (
-    <form action={handleSubmit} className="space-y-4 mt-2">
-      {state.error && (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
+      {errors.root && (
         <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          {state.error}
+          {errors.root.message}
+        </div>
+      )}
+      {success && (
+        <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+          Organization updated successfully.
         </div>
       )}
 
@@ -52,42 +66,29 @@ export default function OrganizationSettings({
         <Label htmlFor="name">Name</Label>
         <Input
           id="name"
-          name="name"
-          required
           placeholder="e.g. Acme Corp"
-          defaultValue={name}
-          onChange={handleNameChange}
+          {...register("name", { onChange: handleNameChange })}
         />
-        {state.errors?.name && (
-          <p className="text-xs text-red-600">{state.errors.name[0]}</p>
+        {errors.name && (
+          <p className="text-xs text-red-600">{errors.name.message}</p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label
-          htmlFor="slug"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Slug
-        </label>
-        <input
+        <Label htmlFor="slug">Slug</Label>
+        <Input
           id="slug"
-          type="text"
-          name="slug"
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-          required
-          placeholder="Enter Slug (e.g. my-organization)"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          placeholder="e.g. acme-corp"
+          {...register("slug")}
         />
-        {state.errors?.slug && (
-          <p className="mt-1.5 text-xs text-red-600">{state.errors.slug[0]}</p>
+        {errors.slug && (
+          <p className="mt-1.5 text-xs text-red-600">{errors.slug.message}</p>
         )}
       </div>
 
       <div className="flex justify-end gap-2 pt-2">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "Updating..." : "Update"}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Updating..." : "Update"}
         </Button>
       </div>
     </form>
