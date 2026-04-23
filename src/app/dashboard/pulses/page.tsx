@@ -10,7 +10,7 @@ export default async function PulsesPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
   const orgId = await getUserOrganization(String(user.id));
-  if (!orgId) redirect("/dashboard/create-organization");
+  if (!orgId) redirect("/create-organization");
 
   const pulses = await db
     .select()

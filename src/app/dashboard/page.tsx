@@ -9,7 +9,7 @@ export default async function DashboardPage() {
   const ctx = await getCurrentUserWithOrg();
   const user = ctx?.user;
 
-  const memberCount = await getOrgMemberCount(ctx?.orgId ?? "");
+  const memberCount = ctx?.orgId ? await getOrgMemberCount(ctx.orgId) : 0;
 
   const activePulses =
     statusCounts.find((s) => s.status === "active")?.count ?? 0;

@@ -2,6 +2,7 @@ import { getCurrentUserWithOrg, getOrganization } from "@/lib/organizations";
 import ProfileSettings from "./profile";
 import OrganizationSettings from "./organization";
 import { Separator } from "@/components/ui/separator";
+import PasswordChange from "./password";
 
 export default async function SettingsPage() {
   const ctx = await getCurrentUserWithOrg();
@@ -32,12 +33,26 @@ export default async function SettingsPage() {
 
       <section className="space-y-4">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Organization</h2>
+          <h2 className="text-base font-semibold text-gray-900">
+            Organization
+          </h2>
           <p className="text-sm text-gray-500">
             Update your organization name and slug.
           </p>
         </div>
         <OrganizationSettings name={org.name} defaultSlug={org.slug} />
+      </section>
+
+      <Separator />
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-base font-semibold text-gray-900">
+            Change password
+          </h2>
+          <p className="text-sm text-gray-500">Change your account password</p>
+        </div>
+        <PasswordChange />
       </section>
     </div>
   );

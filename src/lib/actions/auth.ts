@@ -52,6 +52,6 @@ export async function signUpAction(
     return { errors: { email: ["Email already in use"] } };
   }
 
-  await signIn("credentials", { email, password, redirectTo: "/dashboard/create-organization" });
+  await signIn("credentials", { email, password, redirectTo: "/create-organization" });
   return {};
 }

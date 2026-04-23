@@ -1,5 +1,7 @@
 import { Dashboard } from "@/components/dashboard/layout";
 import { getCurrentUser } from "@/lib/auth";
+import { getUserOrganization } from "@/lib/organizations";
+import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
   children,
@@ -7,6 +9,9 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
+  const orgId = await getUserOrganization(String(user?.id));
+  if (!orgId) redirect("/create-organization");
+
   const initials =
     user?.name
       ?.split(" ")
