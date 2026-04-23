@@ -19,8 +19,10 @@ export function Sidebar({ name, email, initials }: Props) {
     <aside
       className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 flex flex-col transition-all duration-200 ${isCollapsed ? "w-16" : "w-64"}`}
     >
-      <div className="px-5 py-4">
-        {!isCollapsed && (
+      <div className="px-5 py-4 flex items-center justify-center">
+        {isCollapsed ? (
+          <span className="font-bold text-lg text-indigo-600">T</span>
+        ) : (
           <span className="font-bold text-lg tracking-tight text-indigo-600">
             TeamPulse
           </span>

@@ -2,13 +2,13 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSidebarStore } from "@/lib/stores/sidebar";
-import { PanelLeft } from "lucide-react";
+import { PanelLeft, LayoutDashboard, Zap, Users, Settings } from "lucide-react";
 
 const links = [
-  { title: "Dashboard", href: "/dashboard", icon: "◻" },
-  { title: "Pulses", href: "/dashboard/pulses", icon: "⚡" },
-  { title: "Team", href: "/dashboard/team", icon: "👥" },
-  { title: "Settings", href: "/dashboard/settings", icon: "⚙" },
+  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { title: "Pulses", href: "/dashboard/pulses", icon: Zap },
+  { title: "Team", href: "/dashboard/team", icon: Users },
+  { title: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 export function NavLinks() {
@@ -41,7 +41,7 @@ export function NavLinks() {
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
-                <span className="text-base shrink-0">{link.icon}</span>
+                <link.icon size={16} className="shrink-0" />
                 {!isCollapsed && <span>{link.title}</span>}
               </Link>
             </li>

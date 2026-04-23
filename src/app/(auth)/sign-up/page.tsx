@@ -11,7 +11,7 @@ export default function SignUpPage() {
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Create an account</h1>
-          <p className="text-sm text-gray-500 mt-1">Start tracking your team&apos;s pulse</p>
+          <p className="text-sm text-gray-500 mt-1">{"Start tracking your team's pulse"}</p>
         </div>
 
         <form action={formAction} className="space-y-5">

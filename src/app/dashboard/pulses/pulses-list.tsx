@@ -54,7 +54,7 @@ export default function PulsesList({ initialData }: { initialData: Pulse[] }) {
         <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-gray-200 rounded-xl">
           <p className="text-gray-400 text-sm">No pulses yet</p>
           <p className="text-gray-400 text-xs mt-1">
-            Click &quot;+ New Pulse&quot; to create your first one
+            {'Click "+ New Pulse" to create your first one'}
           </p>
         </div>
       ) : (

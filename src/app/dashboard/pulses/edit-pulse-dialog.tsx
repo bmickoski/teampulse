@@ -70,8 +70,8 @@ export function EditPulseDialog({ id, title, description, status }: Pulse) {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>
-        <Pencil />
+      <Button variant="outline" size="icon" onClick={() => setOpen(true)}>
+        <Pencil size={14} />
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>

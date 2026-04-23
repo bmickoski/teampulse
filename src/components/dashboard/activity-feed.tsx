@@ -1,13 +1,22 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { Zap, Trash2, Pencil, UserPlus, UserMinus, Lock, ClipboardList } from "lucide-react";
 
 type ActivityLog = {
   id: string;
   action: string;
   message: string;
   createdAt: string;
+};
+
+const iconMap: Record<string, React.ElementType> = {
+  pulse_created: Zap,
+  pulse_deleted: Trash2,
+  pulse_updated: Pencil,
+  member_invited: UserPlus,
+  member_removed: UserMinus,
+  user_password_updated: Lock,
 };
 
 export function ActivityFeed() {
@@ -34,19 +43,20 @@ export function ActivityFeed() {
 
   return (
     <ul className="space-y-3">
-      {logs.map((log) => (
-        <li key={log.id} className="flex items-start gap-3 text-sm">
-          <span className="mt-0.5 text-lg">
-            {log.action === "pulse_created" ? "⚡" : "🗑️"}
-          </span>
-          <div>
-            <p className="text-gray-700">{log.message}</p>
-            <p className="text-xs text-gray-400">
-              {new Date(log.createdAt).toLocaleTimeString()}
-            </p>
-          </div>
-        </li>
-      ))}
+      {logs.map((log) => {
+        const Icon = iconMap[log.action] ?? ClipboardList;
+        return (
+          <li key={log.id} className="flex items-start gap-3 text-sm">
+            <Icon size={14} className="mt-0.5 shrink-0 text-gray-400" />
+            <div className="flex-1 min-w-0">
+              <p className="text-gray-700">{log.message}</p>
+              <p className="text-xs text-gray-400">
+                {new Date(log.createdAt).toLocaleTimeString()}
+              </p>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }

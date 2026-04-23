@@ -1,26 +1,31 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, Zap, BarChart2 } from "lucide-react";
 
 const features = [
   {
     title: "Teams",
     description: "Create organizations, invite teammates, and manage roles — all in one place.",
-    icon: "👥",
+    icon: Users,
   },
   {
     title: "Pulses",
     description: "Track projects with tasks and time logs. Know what's moving and what's stuck.",
-    icon: "⚡",
+    icon: Zap,
   },
   {
     title: "Metrics",
     description: "Visualize team output over time. Spot trends before they become problems.",
-    icon: "📊",
+    icon: BarChart2,
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await auth();
+  if (session?.user) redirect("/dashboard");
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <header className="px-6 py-4 border-b flex items-center justify-between">
@@ -51,9 +56,6 @@ export default function HomePage() {
               <a href="/sign-up">
                 <Button size="lg" className="px-8">Get started for free</Button>
               </a>
-              <a href="/sign-in">
-                <Button size="lg" variant="outline" className="px-8">Sign in</Button>
-              </a>
             </div>
           </div>
         </section>
@@ -66,7 +68,7 @@ export default function HomePage() {
             {features.map((feature) => (
               <Card key={feature.title} className="border-gray-200 shadow-none hover:shadow-md transition-shadow">
                 <CardHeader>
-                  <div className="text-3xl mb-2">{feature.icon}</div>
+                  <feature.icon size={24} className="mb-2 text-indigo-600" />
                   <CardTitle className="text-base">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>

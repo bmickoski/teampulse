@@ -28,7 +28,7 @@ export default async function TeamPage() {
               <p className="font-medium text-gray-900">{member.name}</p>
               <p className="text-sm text-gray-500">{member.email}</p>
             </div>
-            <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-3">
               <span className="text-xs font-medium px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 capitalize">
                 {member.role}
               </span>

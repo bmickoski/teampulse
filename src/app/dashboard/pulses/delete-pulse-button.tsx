@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { pulseDeleteAction } from "@/lib/actions/pulses";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 
 type Pulse = {
   id: string;
@@ -42,9 +43,10 @@ export function DeletePulseButton({ pulseId }: { pulseId: string }) {
       type="button"
       onClick={() => mutate()}
       variant="destructive"
+      size="icon"
       disabled={isPending}
     >
-      {isPending ? "Deleting..." : "X"}
+      <Trash2 size={14} />
     </Button>
   );
 }
