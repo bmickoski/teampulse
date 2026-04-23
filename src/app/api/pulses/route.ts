@@ -6,12 +6,18 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   const ctx = await getCurrentUserWithOrg();
-  if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!ctx)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const pulses = await db
     .select()
     .from(pulsesTable)
-    .where(and(isNull(pulsesTable.deletedAt), eq(pulsesTable.organizationId, ctx.orgId)))
+    .where(
+      and(
+        isNull(pulsesTable.deletedAt),
+        eq(pulsesTable.organizationId, ctx.orgId),
+      ),
+    )
     .orderBy(desc(pulsesTable.createdAt));
 
   return NextResponse.json(pulses);
