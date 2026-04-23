@@ -81,7 +81,7 @@ export function EditPulseDialog({ id, title, description, status }: Pulse) {
     formData.append("pulseId", id);
     formData.append("title", data.title);
     formData.append("description", data.description ?? "");
-    formData.append("status", data.status);
+    formData.append("status", data.status ?? "active");
     mutate(formData);
     setOpen(false);
   };

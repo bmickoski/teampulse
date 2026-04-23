@@ -9,6 +9,7 @@ export default async function SettingsPage() {
   if (!ctx) return null;
 
   const org = await getOrganization(ctx.orgId);
+  const isOwner = ctx.role === "owner";
 
   return (
     <div className="max-w-2xl mx-auto space-y-10">
@@ -29,19 +30,20 @@ export default async function SettingsPage() {
         <ProfileSettings name={ctx.user.name ?? ""} />
       </section>
 
-      <Separator />
-
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-base font-semibold text-gray-900">
-            Organization
-          </h2>
-          <p className="text-sm text-gray-500">
-            Update your organization name and slug.
-          </p>
-        </div>
-        <OrganizationSettings name={org.name} defaultSlug={org.slug} />
-      </section>
+      {isOwner && (
+        <>
+          <Separator />
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">Organization</h2>
+              <p className="text-sm text-gray-500">
+                Update your organization name and slug.
+              </p>
+            </div>
+            <OrganizationSettings name={org.name} defaultSlug={org.slug} />
+          </section>
+        </>
+      )}
 
       <Separator />
 

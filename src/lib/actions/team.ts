@@ -19,6 +19,10 @@ export async function inviteMemberAction(
   const orgId = ctx.orgId;
   const userId = ctx.user.id;
 
+  if (ctx.role !== "owner") {
+    return { error: "Only the organization owner can invite members" };
+  }
+
   const form = Object.fromEntries(formData);
   const validationResult = inviteTeamMemberSchema.safeParse(form);
 
@@ -90,20 +94,7 @@ export async function removeMemberAction(
   const orgId = ctx.orgId;
   const userId = ctx.user.id;
 
-  const currentUserMembership= await db
-    .select({ role: membershipsTable.role })
-    .from(membershipsTable)
-    .where(
-      and(
-        eq(membershipsTable.organizationId, orgId),
-        eq(membershipsTable.userId, userId ?? ""),
-      ),
-    );
-
-  if (
-    currentUserMembership.length === 0 ||
-    currentUserMembership[0].role !== "owner"
-  ) {
+  if (ctx.role !== "owner") {
     return { error: "Only the organization owner can remove members" };
   }
 

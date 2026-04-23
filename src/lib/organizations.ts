@@ -24,10 +24,15 @@ export async function getCurrentUserWithOrg() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const orgId = await getUserOrganization(String(user.id));
-  if (!orgId) return null;
+  const membership = await db
+    .select()
+    .from(membershipsTable)
+    .where(eq(membershipsTable.userId, String(user.id)))
+    .then((r) => r[0]);
 
-  return { user, orgId };
+  if (!membership) return null;
+
+  return { user, orgId: membership.organizationId, role: membership.role as "owner" | "member" };
 }
 
 export async function getOrgMemberCount(orgId: string) {

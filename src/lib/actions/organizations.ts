@@ -57,13 +57,10 @@ export async function updateOrganizationAction(
   formData: FormData,
 ): Promise<OrganizationsActionState> {
   const ctx = await getCurrentUserWithOrg();
-  const orgId = ctx?.orgId;
-  const user = ctx?.user.id;
-  if (!user) {
-    return {
-      error: "Unauthorized",
-    };
-  }
+  if (!ctx) return { error: "Unauthorized" };
+  if (ctx.role !== "owner") return { error: "Only the organization owner can update organization settings" };
+
+  const orgId = ctx.orgId;
 
   const form = Object.fromEntries(formData);
   const validationResult = organizationsFormSchema.safeParse(form);
@@ -80,7 +77,7 @@ export async function updateOrganizationAction(
     await db
       .update(organizationsTable)
       .set({ name, slug })
-      .where(eq(organizationsTable.id, orgId ?? ""));
+      .where(eq(organizationsTable.id, orgId));
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
     if (message.includes("unique") || message.includes("duplicate")) {

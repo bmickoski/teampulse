@@ -1,9 +1,10 @@
-import { getOrgMembers } from "@/lib/organizations";
+import { getCurrentUserWithOrg, getOrgMembers } from "@/lib/organizations";
 import { InviteMemberDialog } from "./invite-member-form";
 import { RemoveMemberButton } from "./remove-member-form";
 
 export default async function TeamPage() {
-  const members = await getOrgMembers();
+  const [members, ctx] = await Promise.all([getOrgMembers(), getCurrentUserWithOrg()]);
+  const isOwner = ctx?.role === "owner";
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -15,7 +16,7 @@ export default async function TeamPage() {
           </p>
         </div>
 
-        <InviteMemberDialog />
+        {isOwner && <InviteMemberDialog />}
       </div>
 
       <div className="space-y-3">
@@ -32,12 +33,14 @@ export default async function TeamPage() {
               <span className="text-xs font-medium px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 capitalize">
                 {member.role}
               </span>
-              <RemoveMemberButton
-                memberId={member.userId}
-                memberName={member.name}
-                memberEmail={member.email}
-                memberRole={member.role}
-              />
+              {isOwner && (
+                <RemoveMemberButton
+                  memberId={member.userId}
+                  memberName={member.name}
+                  memberEmail={member.email}
+                  memberRole={member.role}
+                />
+              )}
             </div>
           </div>
         ))}
