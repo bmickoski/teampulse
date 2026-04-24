@@ -45,7 +45,7 @@ export function ActivityFeed() {
             <div className="flex-1 min-w-0">
               <p className="text-gray-700">{log.message}</p>
               <p className="text-xs text-gray-400">
-                {new Date(log.createdAt).toLocaleTimeString()}
+                {relativeTime(log.createdAt)}
               </p>
             </div>
           </li>
@@ -53,4 +53,16 @@ export function ActivityFeed() {
       })}
     </ul>
   );
+}
+
+const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+function relativeTime(date: string): string {
+  const diff = (new Date(date).getTime() - Date.now()) / 1000;
+  const abs = Math.abs(diff);
+
+  if (abs < 60) return "just now";
+  if (abs < 3600) return rtf.format(Math.round(diff / 60), "minute");
+  if (abs < 86400) return rtf.format(Math.round(diff / 3600), "hour");
+  return rtf.format(Math.round(diff / 86400), "day");
 }
