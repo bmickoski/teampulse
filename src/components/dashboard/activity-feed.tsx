@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Zap, Trash2, Pencil, UserPlus, UserMinus, Lock, ClipboardList } from "lucide-react";
-
-type ActivityLog = {
-  id: string;
-  action: string;
-  message: string;
-  createdAt: string;
-};
+import { type ActivityLog } from "@/lib/types";
 
 const iconMap: Record<string, React.ElementType> = {
   pulse_created: Zap,

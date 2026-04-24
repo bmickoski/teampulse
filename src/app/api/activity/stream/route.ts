@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { activityLogsTable } from "@/db/schema";
 import { getCurrentUserWithOrg } from "@/lib/organizations";
 import { desc, eq } from "drizzle-orm";
+import { ACTIVITY_LOG_LIMIT } from "@/lib/constants";
 
 export async function GET() {
   const ctx = await getCurrentUserWithOrg();
@@ -18,7 +19,7 @@ export async function GET() {
           .from(activityLogsTable)
           .where(eq(activityLogsTable.organizationId, ctx.orgId))
           .orderBy(desc(activityLogsTable.createdAt))
-          .limit(20);
+          .limit(ACTIVITY_LOG_LIMIT);
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(logs)}\n\n`));
       };
       await send();

@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { activityLogsTable } from "@/db/schema";
 import { getCurrentUserWithOrg } from "@/lib/organizations";
 import { desc, eq } from "drizzle-orm";
+import { ACTIVITY_LOG_LIMIT } from "@/lib/constants";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -13,7 +14,7 @@ export async function GET() {
     .from(activityLogsTable)
     .where(eq(activityLogsTable.organizationId, ctx.orgId))
     .orderBy(desc(activityLogsTable.createdAt))
-    .limit(20);
+    .limit(ACTIVITY_LOG_LIMIT);
 
   return NextResponse.json(logs);
 }

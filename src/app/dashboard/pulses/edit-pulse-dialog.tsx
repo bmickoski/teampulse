@@ -4,6 +4,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { pulseEditAction } from "@/lib/actions/pulses";
+import { type Pulse } from "@/lib/types";
 import { pulsesFormSchema, type PulsesFormValues } from "@/lib/validations/pulses";
 import {
   Dialog,
@@ -24,13 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-type Pulse = {
-  id: string;
-  title: string;
-  description: string | null;
-  status: string;
-};
 
 export function EditPulseDialog({ id, title, description, status }: Pulse) {
   const [open, setOpen] = useState(false);

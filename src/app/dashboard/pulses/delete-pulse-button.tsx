@@ -4,13 +4,7 @@ import { Button } from "@/components/ui/button";
 import { pulseDeleteAction } from "@/lib/actions/pulses";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
-
-type Pulse = {
-  id: string;
-  title: string;
-  description: string | null;
-  status: string;
-};
+import { type Pulse } from "@/lib/types";
 
 export function DeletePulseButton({ pulseId }: { pulseId: string }) {
   const queryClient = useQueryClient();
