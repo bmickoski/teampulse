@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { CalendarDays, User } from "lucide-react";
+import Link from "next/link";
 
 const statusColor = {
   active: "bg-green-100 text-green-700",
@@ -44,9 +45,9 @@ export default async function PulseDetailPage({
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-2">
-        <a href="/dashboard/pulses" className="text-sm text-gray-400 hover:text-gray-600">
+        <Link href="/dashboard/pulses" className="text-sm text-gray-400 hover:text-gray-600">
           Pulses
-        </a>
+        </Link>
         <span className="text-gray-300">/</span>
         <span className="text-sm text-gray-600">{result.title}</span>
       </div>

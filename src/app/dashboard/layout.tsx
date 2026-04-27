@@ -2,11 +2,14 @@ import { Dashboard } from "@/components/dashboard/layout";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserOrganization } from "@/lib/organizations";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 export default async function DashboardLayout({
   children,
+  modal,
 }: {
   children: React.ReactNode;
+  modal: React.ReactNode;
 }) {
   const user = await getCurrentUser();
   const orgId = await getUserOrganization(String(user?.id));
@@ -28,6 +31,7 @@ export default async function DashboardLayout({
       >
         {children}
       </Dashboard>
+      <Suspense fallback={null}>{modal}</Suspense>
     </div>
   );
 }

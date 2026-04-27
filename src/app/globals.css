@@ -128,3 +128,9 @@
     @apply font-sans;
   }
 }
+
+/* Prevent Radix dialog scroll lock from shifting layout */
+[data-scroll-locked] {
+  padding-right: 0 !important;
+  margin-right: 0 !important;
+}
