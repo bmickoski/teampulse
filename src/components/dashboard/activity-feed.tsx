@@ -1,8 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Zap, Trash2, Pencil, UserPlus, UserMinus, Lock, ClipboardList } from "lucide-react";
+import {
+  Zap,
+  Trash2,
+  Pencil,
+  UserPlus,
+  UserMinus,
+  Lock,
+  ClipboardList,
+} from "lucide-react";
 import { type ActivityLog } from "@/lib/types";
+import { relativeTime } from "@/lib/utils/time";
 
 const iconMap: Record<string, React.ElementType> = {
   pulse_created: Zap,
@@ -53,16 +62,4 @@ export function ActivityFeed() {
       })}
     </ul>
   );
-}
-
-const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-
-function relativeTime(date: string): string {
-  const diff = (new Date(date).getTime() - Date.now()) / 1000;
-  const abs = Math.abs(diff);
-
-  if (abs < 60) return "just now";
-  if (abs < 3600) return rtf.format(Math.round(diff / 60), "minute");
-  if (abs < 86400) return rtf.format(Math.round(diff / 3600), "hour");
-  return rtf.format(Math.round(diff / 86400), "day");
 }

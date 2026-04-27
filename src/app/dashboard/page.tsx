@@ -4,16 +4,10 @@ import { PulsesChart } from "@/components/dashboard/pulses-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUserWithOrg, getOrgMemberCount } from "@/lib/organizations";
 import { getStatusCounts } from "@/lib/pulses";
+import { getGreeting } from "@/lib/utils/greeting";
 import { Zap, Users, CheckCircle } from "lucide-react";
 
 export const metadata = { title: "Dashboard" };
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
-}
 
 async function DashboardStats() {
   const [statusCounts, ctx] = await Promise.all([
