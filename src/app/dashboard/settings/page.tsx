@@ -4,6 +4,8 @@ import OrganizationSettings from "./organization";
 import { Separator } from "@/components/ui/separator";
 import PasswordChange from "./password";
 
+export const metadata = { title: "Settings" };
+
 export default async function SettingsPage() {
   const ctx = await getCurrentUserWithOrg();
   if (!ctx) return null;
@@ -35,7 +37,9 @@ export default async function SettingsPage() {
           <Separator />
           <section className="space-y-4">
             <div>
-              <h2 className="text-base font-semibold text-gray-900">Organization</h2>
+              <h2 className="text-base font-semibold text-gray-900">
+                Organization
+              </h2>
               <p className="text-sm text-gray-500">
                 Update your organization name and slug.
               </p>

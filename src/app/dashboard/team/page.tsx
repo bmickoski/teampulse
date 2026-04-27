@@ -2,8 +2,13 @@ import { getCurrentUserWithOrg, getOrgMembers } from "@/lib/organizations";
 import { InviteMemberDialog } from "./invite-member-form";
 import { RemoveMemberButton } from "./remove-member-form";
 
+export const metadata = { title: "Team" };
+
 export default async function TeamPage() {
-  const [members, ctx] = await Promise.all([getOrgMembers(), getCurrentUserWithOrg()]);
+  const [members, ctx] = await Promise.all([
+    getOrgMembers(),
+    getCurrentUserWithOrg(),
+  ]);
   const isOwner = ctx?.role === "owner";
 
   return (

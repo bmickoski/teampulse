@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 import PulsesList from "./pulses-list";
 import { getUserOrganization } from "@/lib/organizations";
 
+export const metadata = { title: "Pulses" };
+
 export default async function PulsesPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");

@@ -8,20 +8,25 @@ import { Users, Zap, BarChart2 } from "lucide-react";
 const features = [
   {
     title: "Teams",
-    description: "Create organizations, invite teammates, and manage roles — all in one place.",
+    description:
+      "Create organizations, invite teammates, and manage roles — all in one place.",
     icon: Users,
   },
   {
     title: "Pulses",
-    description: "Track projects with tasks and time logs. Know what's moving and what's stuck.",
+    description:
+      "Track projects with tasks and time logs. Know what's moving and what's stuck.",
     icon: Zap,
   },
   {
     title: "Metrics",
-    description: "Visualize team output over time. Spot trends before they become problems.",
+    description:
+      "Visualize team output over time. Spot trends before they become problems.",
     icon: BarChart2,
   },
 ];
+
+export const metadata = { title: "Home" };
 
 export default async function HomePage() {
   const session = await auth();
@@ -32,7 +37,9 @@ export default async function HomePage() {
         <span className="font-bold text-lg tracking-tight">TeamPulse</span>
         <div className="flex items-center gap-3">
           <a href="/sign-in">
-            <Button variant="ghost" size="sm">Sign in</Button>
+            <Button variant="ghost" size="sm">
+              Sign in
+            </Button>
           </a>
           <a href="/sign-up">
             <Button size="sm">Get started</Button>
@@ -44,17 +51,21 @@ export default async function HomePage() {
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100 via-white to-white" />
           <div className="max-w-3xl mx-auto px-6 py-28 text-center">
-            <Badge variant="secondary" className="mb-6">Now in beta</Badge>
+            <Badge variant="secondary" className="mb-6">
+              Now in beta
+            </Badge>
             <h1 className="text-6xl font-extrabold tracking-tight text-gray-900 mb-5 leading-tight">
-              Your team,{" "}
-              <span className="text-indigo-600">in sync</span>
+              Your team, <span className="text-indigo-600">in sync</span>
             </h1>
             <p className="text-xl text-gray-500 mb-10 max-w-xl mx-auto">
-              TeamPulse gives your team a shared view of what matters — projects, progress, and people.
+              TeamPulse gives your team a shared view of what matters —
+              projects, progress, and people.
             </p>
             <div className="flex gap-3 justify-center">
               <a href="/sign-up">
-                <Button size="lg" className="px-8">Get started for free</Button>
+                <Button size="lg" className="px-8">
+                  Get started for free
+                </Button>
               </a>
             </div>
           </div>
@@ -66,7 +77,10 @@ export default async function HomePage() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {features.map((feature) => (
-              <Card key={feature.title} className="border-gray-200 shadow-none hover:shadow-md transition-shadow">
+              <Card
+                key={feature.title}
+                className="border-gray-200 shadow-none hover:shadow-md transition-shadow"
+              >
                 <CardHeader>
                   <feature.icon size={24} className="mb-2 text-indigo-600" />
                   <CardTitle className="text-base">{feature.title}</CardTitle>

@@ -6,6 +6,8 @@ import { getCurrentUserWithOrg, getOrgMemberCount } from "@/lib/organizations";
 import { getStatusCounts } from "@/lib/pulses";
 import { Zap, Users, CheckCircle } from "lucide-react";
 
+export const metadata = { title: "Dashboard" };
+
 function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return "Good morning";
@@ -19,13 +21,30 @@ async function DashboardStats() {
     getCurrentUserWithOrg(),
   ]);
   const memberCount = ctx?.orgId ? await getOrgMemberCount(ctx.orgId) : 0;
-  const activePulses = statusCounts.find((s) => s.status === "active")?.count ?? 0;
-  const completed = statusCounts.find((s) => s.status === "completed")?.count ?? 0;
+  const activePulses =
+    statusCounts.find((s) => s.status === "active")?.count ?? 0;
+  const completed =
+    statusCounts.find((s) => s.status === "completed")?.count ?? 0;
 
   const stats = [
-    { label: "Active Pulses", value: String(activePulses), icon: Zap, color: "text-indigo-600" },
-    { label: "Team Members", value: String(memberCount), icon: Users, color: "text-blue-600" },
-    { label: "Completed", value: String(completed), icon: CheckCircle, color: "text-green-600" },
+    {
+      label: "Active Pulses",
+      value: String(activePulses),
+      icon: Zap,
+      color: "text-indigo-600",
+    },
+    {
+      label: "Team Members",
+      value: String(memberCount),
+      icon: Users,
+      color: "text-blue-600",
+    },
+    {
+      label: "Completed",
+      value: String(completed),
+      icon: CheckCircle,
+      color: "text-green-600",
+    },
   ];
 
   return (
@@ -56,7 +75,10 @@ function StatsSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-pulse">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="border border-gray-200 rounded-xl p-4 space-y-3">
+        <div
+          key={i}
+          className="border border-gray-200 rounded-xl p-4 space-y-3"
+        >
           <div className="h-3 w-24 bg-gray-200 rounded" />
           <div className="h-8 w-12 bg-gray-200 rounded" />
         </div>

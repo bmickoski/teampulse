@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Toaster } from "sonner";
+import { Metadata } from "next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,9 +14,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// layout.tsx
 export const metadata: Metadata = {
-  title: "TeamPulse",
-  description: "Your team, in sync",
+  title: {
+    template: "%s | TeamPulse",
+    default: "TeamPulse",
+  },
+  description: "Your team, in sync.",
+  openGraph: {
+    title: "TeamPulse",
+    description: "Your team, in sync.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
