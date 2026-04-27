@@ -1,13 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardAction, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeletePulseButton } from "./delete-pulse-button";
 import { CreatePulseDialog } from "./create-pulse-dialog";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -25,6 +19,7 @@ const STATUS_OPTIONS = ["all", "active", "completed", "archived"] as const;
 type StatusFilter = (typeof STATUS_OPTIONS)[number];
 
 import { type Pulse } from "@/lib/types";
+import Link from "next/link";
 
 type PulsesPage = {
   pulses: Pulse[];
@@ -32,7 +27,10 @@ type PulsesPage = {
   page: number;
 };
 
-async function fetchPulses(page: number, status: StatusFilter): Promise<PulsesPage> {
+async function fetchPulses(
+  page: number,
+  status: StatusFilter,
+): Promise<PulsesPage> {
   const response = await fetch(`/api/pulses?page=${page}&status=${status}`);
   if (!response.ok) throw new Error("Failed to fetch pulses");
   return response.json();
@@ -44,21 +42,18 @@ export default function PulsesList({ initialData }: { initialData: Pulse[] }) {
     parseAsStringLiteral(STATUS_OPTIONS).withDefault("all"),
   );
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ["pulses", status],
-    queryFn: ({ pageParam }) => fetchPulses(pageParam, status),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.page + 1 : undefined,
-    initialData: {
-      pages: [{ pulses: initialData, hasMore: false, page: 1 }],
-      pageParams: [1],
-    },
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["pulses", status],
+      queryFn: ({ pageParam }) => fetchPulses(pageParam, status),
+      initialPageParam: 1,
+      getNextPageParam: (lastPage) =>
+        lastPage.hasMore ? lastPage.page + 1 : undefined,
+      initialData: {
+        pages: [{ pulses: initialData, hasMore: false, page: 1 }],
+        pageParams: [1],
+      },
+    });
 
   const pulses = data.pages.flatMap((p) => p.pulses);
 
@@ -68,7 +63,8 @@ export default function PulsesList({ initialData }: { initialData: Pulse[] }) {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Pulses</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {pulses.length} pulse{pulses.length !== 1 ? "s" : ""} in your organization
+            {pulses.length} pulse{pulses.length !== 1 ? "s" : ""} in your
+            organization
           </p>
         </div>
         <CreatePulseDialog />
@@ -101,24 +97,29 @@ export default function PulsesList({ initialData }: { initialData: Pulse[] }) {
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {pulses.map((pulse) => (
-              <Card
-                key={pulse.id}
-                className="border-gray-200 shadow-none hover:shadow-md transition-shadow"
-              >
-                <CardHeader className="pb-2">
-                  <Badge className={statusColor[pulse.status as keyof typeof statusColor]}>
-                    {pulse.status}
-                  </Badge>
-                  <CardTitle className="text-base mt-2">{pulse.title}</CardTitle>
-                  <CardAction className="flex items-center gap-2">
-                    <EditPulseDialog {...pulse} />
-                    <DeletePulseButton pulseId={pulse.id} />
-                  </CardAction>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500">{pulse.description}</p>
-                </CardContent>
-              </Card>
+              <Link key={pulse.id} href={`/dashboard/pulses/${pulse.id}`}>
+                <Card
+                  key={pulse.id}
+                  className="border-gray-200 shadow-none hover:shadow-md transition-shadow"
+                >
+                  <CardHeader className="pb-2">
+                    <Badge
+                      className={
+                        statusColor[pulse.status as keyof typeof statusColor]
+                      }
+                    >
+                      {pulse.status}
+                    </Badge>
+                    <CardTitle className="text-base mt-2">
+                      {pulse.title}
+                    </CardTitle>
+                    <CardAction className="flex items-center gap-2">
+                      <EditPulseDialog {...pulse} />
+                      <DeletePulseButton pulseId={pulse.id} />
+                    </CardAction>
+                  </CardHeader>
+                </Card>
+              </Link>
             ))}
           </div>
 
