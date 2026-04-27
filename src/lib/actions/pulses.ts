@@ -1,4 +1,5 @@
 "use server";
+import { z } from "zod";
 import { db } from "@/db";
 import {
   type PulsesActionState,
@@ -26,7 +27,7 @@ export async function pulsesAction(
   if (!validationResult.success) {
     return {
       form,
-      errors: validationResult.error.flatten().fieldErrors,
+      errors: z.flattenError(validationResult.error).fieldErrors,
     };
   }
   const { title, description, status } = validationResult.data;
@@ -36,18 +37,19 @@ export async function pulsesAction(
     if (!orgId) {
       return { error: "User does not belong to an organization" };
     }
-    await db.insert(pulsesTable).values({
+    const [insertedPulse] = await db.insert(pulsesTable).values({
       title,
       description,
       status,
       createdById: loggedUser,
       organizationId: orgId,
-    });
+    }).returning({ id: pulsesTable.id });
     await db.insert(activityLogsTable).values({
       action: "pulse_created",
       message: `Pulse "${title}" created`,
       userId: loggedUser,
       organizationId: orgId,
+      pulseId: insertedPulse.id,
     });
     revalidatePath("/dashboard/pulses");
     return { success: true };
@@ -86,6 +88,7 @@ export async function pulseDeleteAction(
       message: `Pulse "${pulse?.title ?? "Unknown"}" was deleted`,
       userId: loggedUser,
       organizationId: orgId,
+      pulseId,
     });
     revalidatePath("/dashboard/pulses");
     return { success: true };
@@ -111,7 +114,7 @@ export async function pulseEditAction(
   if (!validationResult.success) {
     return {
       form,
-      errors: validationResult.error.flatten().fieldErrors,
+      errors: z.flattenError(validationResult.error).fieldErrors,
     };
   }
   const { title, description, status } = validationResult.data;
@@ -127,14 +130,16 @@ export async function pulseEditAction(
       .set({ title, description, status })
       .where(eq(pulsesTable.id, pulseId));
 
-    await db.insert(activityLogsTable).values({
-      action: "pulse_updated",
-      message: `Pulse "${title ?? "Unknown"}" was updated`,
-      userId: loggedUser,
-      organizationId: orgId,
-    });
+    try {
+      await db.insert(activityLogsTable).values({
+        action: "pulse_updated",
+        message: `Pulse "${title ?? "Unknown"}" was updated`,
+        userId: loggedUser,
+        organizationId: orgId,
+        pulseId,
+      });
+    } catch {}
 
-    revalidatePath("/dashboard/pulses");
     return { success: true };
   } catch {
     return { error: "Failed to edit pulse" };

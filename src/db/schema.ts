@@ -53,4 +53,6 @@ export const activityLogsTable = pgTable("activity_logs", {
     { onDelete: "cascade" },
   ),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  pulseId: uuid("pulse_id").references(() => pulsesTable.id, { onDelete: "set null" }),
+
 });

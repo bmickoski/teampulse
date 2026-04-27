@@ -1,4 +1,5 @@
 "use server";
+import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { ProfileActionState, profileFormSchema } from "../validations/profile";
 import { db } from "@/db";
@@ -20,7 +21,7 @@ export async function profileEditAction(
   if (!validationResult.success) {
     return {
       form,
-      errors: validationResult.error.flatten().fieldErrors,
+      errors: z.flattenError(validationResult.error).fieldErrors,
     };
   }
   const { name } = validationResult.data;

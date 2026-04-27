@@ -41,31 +41,11 @@ export function EditPulseDialog({ id, title, description, status }: Pulse) {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (formData: FormData) => pulseEditAction({}, formData),
-    onMutate: async (formData: FormData) => {
-      await queryClient.cancelQueries({ queryKey: ["pulses"] });
-      const previous = queryClient.getQueryData(["pulses"]);
-      queryClient.setQueryData(["pulses"], (old: Pulse[]) =>
-        old.map((p) =>
-          p.id === id
-            ? {
-                ...p,
-                title: formData.get("title") as string,
-                description: formData.get("description") as string,
-                status: formData.get("status") as string,
-              }
-            : p,
-        ),
-      );
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      queryClient.setQueryData(["pulses"], context?.previous);
+    onError: () => {
       toast.error("Failed to update pulse.");
     },
     onSuccess: () => {
       toast.success("Pulse updated.");
-    },
-    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["pulses"] });
     },
   });

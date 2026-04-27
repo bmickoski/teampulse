@@ -1,4 +1,5 @@
 "use server";
+import { z } from "zod";
 import { db } from "@/db";
 import { activityLogsTable, membershipsTable, usersTable } from "@/db/schema";
 import { revalidatePath } from "next/cache";
@@ -29,7 +30,7 @@ export async function inviteMemberAction(
   if (!validationResult.success) {
     return {
       form,
-      errors: validationResult.error.flatten().fieldErrors,
+      errors: z.flattenError(validationResult.error).fieldErrors,
     };
   }
   const { email } = validationResult.data;

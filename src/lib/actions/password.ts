@@ -1,4 +1,5 @@
 "use server";
+import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import {
@@ -26,7 +27,7 @@ export async function updatePasswordAction(
   if (!validationResult.success) {
     return {
       form,
-      errors: validationResult.error.flatten().fieldErrors,
+      errors: z.flattenError(validationResult.error).fieldErrors,
     };
   }
   const { password, currentPassword } = validationResult.data;

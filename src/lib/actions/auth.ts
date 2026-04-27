@@ -1,4 +1,5 @@
 "use server";
+import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { usersTable } from "@/db/schema";
 import { db } from "@/db";
@@ -40,7 +41,7 @@ export async function signUpAction(
   if (!validationResult.success) {
     return {
       form,
-      errors: validationResult.error.flatten().fieldErrors,
+      errors: z.flattenError(validationResult.error).fieldErrors,
     };
   }
   const { name, email, password } = validationResult.data;

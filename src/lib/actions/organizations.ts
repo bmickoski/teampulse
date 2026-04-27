@@ -1,4 +1,5 @@
 "use server";
+import { z } from "zod";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import {
@@ -26,7 +27,7 @@ export async function organizationsAction(
   if (!validationResult.success) {
     return {
       form,
-      errors: validationResult.error.flatten().fieldErrors,
+      errors: z.flattenError(validationResult.error).fieldErrors,
     };
   }
   const { name, slug } = validationResult.data;
@@ -68,7 +69,7 @@ export async function updateOrganizationAction(
   if (!validationResult.success) {
     return {
       form,
-      errors: validationResult.error.flatten().fieldErrors,
+      errors: z.flattenError(validationResult.error).fieldErrors,
     };
   }
   const { name, slug } = validationResult.data;

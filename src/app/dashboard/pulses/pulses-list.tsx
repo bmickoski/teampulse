@@ -8,6 +8,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { EditPulseDialog } from "./edit-pulse-dialog";
 import { useQueryState, parseAsStringLiteral } from "nuqs";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 const statusColor = {
   active: "bg-green-100 text-green-700",
@@ -19,7 +20,6 @@ const STATUS_OPTIONS = ["all", "active", "completed", "archived"] as const;
 type StatusFilter = (typeof STATUS_OPTIONS)[number];
 
 import { type Pulse } from "@/lib/types";
-import Link from "next/link";
 
 type PulsesPage = {
   pulses: Pulse[];
@@ -37,6 +37,7 @@ async function fetchPulses(
 }
 
 export default function PulsesList({ initialData }: { initialData: Pulse[] }) {
+  const router = useRouter();
   const [status, setStatus] = useQueryState(
     "status",
     parseAsStringLiteral(STATUS_OPTIONS).withDefault("all"),
@@ -97,29 +98,28 @@ export default function PulsesList({ initialData }: { initialData: Pulse[] }) {
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {pulses.map((pulse) => (
-              <Link key={pulse.id} href={`/dashboard/pulses/${pulse.id}`}>
-                <Card
-                  key={pulse.id}
-                  className="border-gray-200 shadow-none hover:shadow-md transition-shadow"
-                >
-                  <CardHeader className="pb-2">
-                    <Badge
-                      className={
-                        statusColor[pulse.status as keyof typeof statusColor]
-                      }
-                    >
-                      {pulse.status}
-                    </Badge>
-                    <CardTitle className="text-base mt-2">
-                      {pulse.title}
-                    </CardTitle>
-                    <CardAction className="flex items-center gap-2">
-                      <EditPulseDialog {...pulse} />
-                      <DeletePulseButton pulseId={pulse.id} />
-                    </CardAction>
-                  </CardHeader>
-                </Card>
-              </Link>
+              <Card
+                key={pulse.id}
+                className="border-gray-200 shadow-none hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => router.push(`/dashboard/pulses/${pulse.id}`)}
+              >
+                <CardHeader className="pb-2">
+                  <Badge
+                    className={
+                      statusColor[pulse.status as keyof typeof statusColor]
+                    }
+                  >
+                    {pulse.status}
+                  </Badge>
+                  <CardTitle className="text-base mt-2">
+                    {pulse.title}
+                  </CardTitle>
+                  <CardAction className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <EditPulseDialog {...pulse} />
+                    <DeletePulseButton pulseId={pulse.id} />
+                  </CardAction>
+                </CardHeader>
+              </Card>
             ))}
           </div>
 
