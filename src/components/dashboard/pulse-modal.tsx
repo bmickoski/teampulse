@@ -41,6 +41,7 @@ type Props = {
   history: HistoryEntry[];
   initialComments: Comment[];
   authorName: string;
+  assignees: { id: string; name: string | null }[];
 };
 
 export function PulseModal({
@@ -48,6 +49,7 @@ export function PulseModal({
   history,
   initialComments,
   authorName,
+  assignees,
 }: Props) {
   const router = useRouter();
 
@@ -83,7 +85,34 @@ export function PulseModal({
                   year: "numeric",
                 })}
                 {isOverdue(result.dueDate, result.status) && (
-                  <span className="font-medium text-red-600 ml-1">· Overdue</span>
+                  <span className="font-medium text-red-600 ml-1">
+                    · Overdue
+                  </span>
+                )}
+              </span>
+            )}
+            {assignees.length > 0 && (
+              <span className="flex items-center gap-1">
+                {assignees.slice(0, 3).map((a) => {
+                  const initials =
+                    a.name
+                      ?.split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2) ?? "?";
+                  return (
+                    <span
+                      key={a.id}
+                      title={a.name ?? ""}
+                      className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium"
+                    >
+                      {initials}
+                    </span>
+                  );
+                })}
+                {assignees.length > 3 && (
+                  <span className="text-xs">+{assignees.length - 3}</span>
                 )}
               </span>
             )}

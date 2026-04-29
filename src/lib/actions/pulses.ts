@@ -6,7 +6,11 @@ import {
   pulsesFormSchema,
 } from "../validations/pulses";
 import { getCurrentUser } from "../auth";
-import { activityLogsTable, pulsesTable } from "@/db/schema";
+import {
+  activityLogsTable,
+  pulseAssignmentsTable,
+  pulsesTable,
+} from "@/db/schema";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm/sql/expressions/conditions";
 import { getUserOrganization } from "../organizations";
@@ -139,15 +143,24 @@ export async function pulseEditAction(
       })
       .where(eq(pulsesTable.id, pulseId));
 
-    try {
-      await db.insert(activityLogsTable).values({
-        action: "pulse_updated",
-        message: `Pulse "${title ?? "Unknown"}" was updated`,
-        userId: loggedUser,
-        organizationId: orgId,
-        pulseId,
-      });
-    } catch {}
+    await db.insert(activityLogsTable).values({
+      action: "pulse_updated",
+      message: `Pulse "${title ?? "Unknown"}" was updated`,
+      userId: loggedUser,
+      organizationId: orgId,
+      pulseId,
+    });
+
+    const userIds = formData.getAll("userId") as string[];
+    await db
+      .delete(pulseAssignmentsTable)
+      .where(eq(pulseAssignmentsTable.pulseId, pulseId));
+
+    if (userIds.length > 0) {
+      await db
+        .insert(pulseAssignmentsTable)
+        .values(userIds.map((userId) => ({ pulseId, userId })));
+    }
 
     return { success: true };
   } catch {

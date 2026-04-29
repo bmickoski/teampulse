@@ -2,13 +2,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getCurrentUserWithOrg } from "@/lib/organizations";
-import { activityLogsTable, pulsesTable, usersTable } from "@/db/schema";
-import { db } from "@/db";
-import { desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { CalendarDays, User } from "lucide-react";
 import Link from "next/link";
-import { getPulseComments } from "@/lib/pulses";
+import { getAssignees, getPulse, getPulseComments, getPulseHistory } from "@/lib/pulses";
 import { PulseComments } from "@/components/dashboard/pulse-comments";
 import { isOverdue } from "@/lib/utils/time";
 
@@ -28,33 +25,12 @@ export default async function PulseDetailPage({
   const ctx = await getCurrentUserWithOrg();
   if (!ctx) notFound();
 
-  const result = await db
-    .select({
-      id: pulsesTable.id,
-      title: pulsesTable.title,
-      description: pulsesTable.description,
-      status: pulsesTable.status,
-      createdAt: pulsesTable.createdAt,
-      creatorName: usersTable.name,
-      organizationId: pulsesTable.organizationId,
-      dueDate: pulsesTable.dueDate,
-    })
-    .from(pulsesTable)
-    .leftJoin(usersTable, eq(pulsesTable.createdById, usersTable.id))
-    .where(eq(pulsesTable.id, id))
-    .then((r) => r[0]);
-
-  const history = await db
-    .select({
-      id: activityLogsTable.id,
-      message: activityLogsTable.message,
-      createdAt: activityLogsTable.createdAt,
-    })
-    .from(activityLogsTable)
-    .where(eq(activityLogsTable.pulseId, id))
-    .orderBy(desc(activityLogsTable.createdAt));
-
-  const comments = await getPulseComments(id);
+  const [result, history, comments, assignees] = await Promise.all([
+    getPulse(id),
+    getPulseHistory(id),
+    getPulseComments(id),
+    getAssignees(id),
+  ]);
 
   if (!result || result.organizationId !== ctx?.orgId) notFound();
 
@@ -104,8 +80,33 @@ export default async function PulseDetailPage({
                   year: "numeric",
                 })}
                 {isOverdue(result.dueDate, result.status) && (
-                  <span className="font-medium text-red-600 ml-1">· Overdue</span>
+                  <span className="font-medium text-red-600 ml-1">
+                    · Overdue
+                  </span>
                 )}
+              </span>
+            )}
+            {assignees.length > 0 && (
+              <span className="flex items-center gap-1">
+                {assignees.slice(0, 3).map((a) => {
+                  const initials =
+                    a.name
+                      ?.split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2) ?? "?";
+                  return (
+                    <span
+                      key={a.id}
+                      title={a.name ?? ""}
+                      className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium"
+                    >
+                      {initials}
+                    </span>
+                  );
+                })}
+                {assignees.length > 3 && <span>+{assignees.length - 3}</span>}
               </span>
             )}
           </div>

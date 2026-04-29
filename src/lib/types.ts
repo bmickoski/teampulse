@@ -4,6 +4,7 @@ export type Pulse = {
   description: string | null;
   status: string;
   dueDate: Date | null;
+  assigneeIds: string[];
 };
 
 export type ActivityLog = {
@@ -11,4 +12,11 @@ export type ActivityLog = {
   action: string;
   message: string;
   createdAt: string;
+};
+
+export type Member = {
+  userId: string;
+  role: string;
+  name: string;
+  email: string;
 };

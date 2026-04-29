@@ -1,4 +1,10 @@
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -70,3 +76,17 @@ export const pulseCommentsTable = pgTable("pulse_comments", {
   content: text("content").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+export const pulseAssignmentsTable = pgTable(
+  "pulse_assignments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    pulseId: uuid("pulse_id")
+      .notNull()
+      .references(() => pulsesTable.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+  },
+  (table) => [uniqueIndex("pulse_user_unique").on(table.pulseId, table.userId)],
+);

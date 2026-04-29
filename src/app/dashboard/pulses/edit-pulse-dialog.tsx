@@ -4,7 +4,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { pulseEditAction } from "@/lib/actions/pulses";
-import { type Pulse } from "@/lib/types";
+import { type Member, type Pulse } from "@/lib/types";
 import {
   pulsesFormSchema,
   type PulsesFormValues,
@@ -40,7 +40,9 @@ export function EditPulseDialog({
   description,
   status,
   dueDate,
-}: Pulse) {
+  assigneeIds,
+  members,
+}: Pulse & { members: Member[] | null }) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -51,6 +53,7 @@ export function EditPulseDialog({
       description: description ?? "",
       status: status as PulsesFormValues["status"],
       dueDate: toDateInputValue(dueDate),
+      assigneeIds: assigneeIds ?? [],
     },
   });
 
@@ -61,8 +64,9 @@ export function EditPulseDialog({
         description: description ?? "",
         status: status as PulsesFormValues["status"],
         dueDate: toDateInputValue(dueDate),
+        assigneeIds: assigneeIds ?? [],
       });
-  }, [open, title, description, status, dueDate, reset]);
+  }, [open, title, description, status, dueDate, assigneeIds, reset]);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (formData: FormData) => pulseEditAction({}, formData),
@@ -82,6 +86,9 @@ export function EditPulseDialog({
     formData.append("description", data.description ?? "");
     formData.append("status", data.status ?? "active");
     formData.append("dueDate", data.dueDate ?? "");
+    // remove any existing assigneeIds first,
+    // then append each
+    data.assigneeIds?.forEach((id) => formData.append("userId", id));
     mutate(formData);
     setOpen(false);
   };
@@ -147,6 +154,31 @@ export function EditPulseDialog({
                 )}
               />
             </div>
+
+            {members && members.length > 0 && (
+              <div className="space-y-1.5">
+                <Label>Assignees</Label>
+                <div className="space-y-2 max-h-36 overflow-y-auto rounded-md border border-input p-2">
+                  {members.map((member) => (
+                    <label
+                      key={member.userId}
+                      className="flex items-center gap-2 text-sm cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        value={member.userId}
+                        {...register("assigneeIds")}
+                        className="rounded"
+                      />
+                      <span>{member.name}</span>
+                      <span className="text-xs text-gray-400 ml-auto">
+                        {member.role}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-2">
               <Button

@@ -10,6 +10,7 @@ export const pulsesFormSchema = z.object({
   description: z.string().optional(),
   status: statusEnum.optional(),
   dueDate: z.string().optional(),
+  assigneeIds: z.array(z.string()).optional(),
 });
 
 export type PulsesFormValues = z.infer<typeof pulsesFormSchema>;
@@ -20,6 +21,7 @@ export type PulsesActionState = {
     description?: string;
     status?: string;
     dueDate?: string;
+    assigneeIds?: string[];
   };
   errors?: {
     title?: string[];

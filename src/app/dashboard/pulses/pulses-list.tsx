@@ -16,10 +16,16 @@ const statusColor = {
   archived: "bg-gray-100 text-gray-600",
 } as const;
 
-const STATUS_OPTIONS = ["all", "active", "completed", "archived"] as const;
+const STATUS_OPTIONS = [
+  "all",
+  "active",
+  "completed",
+  "archived",
+  "mine",
+] as const;
 type StatusFilter = (typeof STATUS_OPTIONS)[number];
 
-import { type Pulse } from "@/lib/types";
+import { Member, type Pulse } from "@/lib/types";
 import { isOverdue } from "@/lib/utils/time";
 
 type PulsesPage = {
@@ -37,7 +43,13 @@ async function fetchPulses(
   return response.json();
 }
 
-export default function PulsesList({ initialData }: { initialData: Pulse[] }) {
+export default function PulsesList({
+  initialData,
+  members,
+}: {
+  initialData: Pulse[];
+  members: Member[] | null;
+}) {
   const router = useRouter();
   const [status, setStatus] = useQueryState(
     "status",
@@ -131,12 +143,40 @@ export default function PulsesList({ initialData }: { initialData: Pulse[] }) {
                       )}
                     </div>
                   )}
+                  {pulse.assigneeIds.length > 0 && (
+                    <div className="flex items-center gap-1 mt-1">
+                      {pulse.assigneeIds.slice(0, 3).map((aid) => {
+                        const name =
+                          members?.find((m) => m.userId === aid)?.name ?? "?";
+                        const initials = name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2);
+                        return (
+                          <span
+                            key={aid}
+                            title={name}
+                            className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium"
+                          >
+                            {initials}
+                          </span>
+                        );
+                      })}
+                      {pulse.assigneeIds.length > 3 && (
+                        <span className="text-xs text-gray-400">
+                          +{pulse.assigneeIds.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   <CardAction
                     className="flex items-center gap-2"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <EditPulseDialog {...pulse} />
+                    <EditPulseDialog {...pulse} members={members} />
                     <DeletePulseButton pulseId={pulse.id} />
                   </CardAction>
                 </CardHeader>

@@ -1,9 +1,6 @@
 import { PulseModal } from "@/components/dashboard/pulse-modal";
-import { db } from "@/db";
-import { activityLogsTable, pulsesTable, usersTable } from "@/db/schema";
 import { getCurrentUserWithOrg } from "@/lib/organizations";
-import { getPulseComments } from "@/lib/pulses";
-import { desc, eq } from "drizzle-orm";
+import { getAssignees, getPulse, getPulseComments, getPulseHistory } from "@/lib/pulses";
 import { notFound } from "next/navigation";
 
 export default async function PulseModalPage({
@@ -15,32 +12,11 @@ export default async function PulseModalPage({
   const ctx = await getCurrentUserWithOrg();
   if (!ctx) notFound();
 
-  const [result, history, initialComments] = await Promise.all([
-    db
-      .select({
-        id: pulsesTable.id,
-        title: pulsesTable.title,
-        description: pulsesTable.description,
-        status: pulsesTable.status,
-        createdAt: pulsesTable.createdAt,
-        creatorName: usersTable.name,
-        organizationId: pulsesTable.organizationId,
-        dueDate: pulsesTable.dueDate,
-      })
-      .from(pulsesTable)
-      .leftJoin(usersTable, eq(pulsesTable.createdById, usersTable.id))
-      .where(eq(pulsesTable.id, id))
-      .then((r) => r[0]),
-    db
-      .select({
-        id: activityLogsTable.id,
-        message: activityLogsTable.message,
-        createdAt: activityLogsTable.createdAt,
-      })
-      .from(activityLogsTable)
-      .where(eq(activityLogsTable.pulseId, id))
-      .orderBy(desc(activityLogsTable.createdAt)),
+  const [result, history, initialComments, assignees] = await Promise.all([
+    getPulse(id),
+    getPulseHistory(id),
     getPulseComments(id),
+    getAssignees(id),
   ]);
 
   if (!result || result.organizationId !== ctx.orgId) notFound();
@@ -51,6 +27,7 @@ export default async function PulseModalPage({
       history={history}
       initialComments={initialComments}
       authorName={ctx.user.name ?? "You"}
+      assignees={assignees}
     />
   );
 }

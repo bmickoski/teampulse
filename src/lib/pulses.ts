@@ -1,5 +1,11 @@
 import { db } from "@/db";
-import { pulseCommentsTable, pulsesTable, usersTable } from "@/db/schema";
+import {
+  activityLogsTable,
+  pulseAssignmentsTable,
+  pulseCommentsTable,
+  pulsesTable,
+  usersTable,
+} from "@/db/schema";
 import { count } from "drizzle-orm/sql/functions/aggregate";
 import { getCurrentUser } from "./auth";
 import { getUserOrganization } from "./organizations";
@@ -40,4 +46,42 @@ export async function getPulseComments(pulseId: string) {
       .where(eq(pulseCommentsTable.pulseId, pulseId))
       .orderBy(desc(pulseCommentsTable.createdAt))
   );
+}
+
+export async function getAssignees(pulseId: string) {
+  return db
+    .select({ id: usersTable.id, name: usersTable.name })
+    .from(pulseAssignmentsTable)
+    .innerJoin(usersTable, eq(pulseAssignmentsTable.userId, usersTable.id))
+    .where(eq(pulseAssignmentsTable.pulseId, pulseId));
+}
+
+export async function getPulse(id: string) {
+  return db
+    .select({
+      id: pulsesTable.id,
+      title: pulsesTable.title,
+      description: pulsesTable.description,
+      status: pulsesTable.status,
+      createdAt: pulsesTable.createdAt,
+      creatorName: usersTable.name,
+      organizationId: pulsesTable.organizationId,
+      dueDate: pulsesTable.dueDate,
+    })
+    .from(pulsesTable)
+    .leftJoin(usersTable, eq(pulsesTable.createdById, usersTable.id))
+    .where(eq(pulsesTable.id, id))
+    .then((r) => r[0]);
+}
+
+export async function getPulseHistory(id: string) {
+  return db
+    .select({
+      id: activityLogsTable.id,
+      message: activityLogsTable.message,
+      createdAt: activityLogsTable.createdAt,
+    })
+    .from(activityLogsTable)
+    .where(eq(activityLogsTable.pulseId, id))
+    .orderBy(desc(activityLogsTable.createdAt));
 }
