@@ -9,7 +9,7 @@ import {
 import { count } from "drizzle-orm/sql/functions/aggregate";
 import { getCurrentUser } from "./auth";
 import { getUserOrganization } from "./organizations";
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 
 export async function getStatusCounts() {
   const user = await getCurrentUser();
@@ -84,4 +84,37 @@ export async function getPulseHistory(id: string) {
     .from(activityLogsTable)
     .where(eq(activityLogsTable.pulseId, id))
     .orderBy(desc(activityLogsTable.createdAt));
+}
+
+export async function getMemberWorkload(orgId: string) {
+  return db
+    .select({
+      name: usersTable.name,
+      count: count(pulseAssignmentsTable.pulseId),
+    })
+    .from(pulseAssignmentsTable)
+    .innerJoin(usersTable, eq(pulseAssignmentsTable.userId, usersTable.id))
+    .innerJoin(pulsesTable, eq(pulseAssignmentsTable.pulseId, pulsesTable.id))
+    .where(
+      and(eq(pulsesTable.organizationId, orgId), isNull(pulsesTable.deletedAt)),
+    )
+    .groupBy(usersTable.name);
+}
+
+export async function getPulsesOverTime(orgId: string) {
+  return db
+    .select({
+      week: sql<string>`date_trunc('week', ${pulsesTable.createdAt})`.as("week"),
+      count: count(),
+    })
+    .from(pulsesTable)
+    .where(
+      and(
+        eq(pulsesTable.organizationId, orgId),
+        isNull(pulsesTable.deletedAt),
+        sql`${pulsesTable.createdAt} >= now() - interval '6 weeks'`,
+      ),
+    )
+    .groupBy(sql`date_trunc('week', ${pulsesTable.createdAt})`)
+    .orderBy(sql`date_trunc('week', ${pulsesTable.createdAt})`);
 }

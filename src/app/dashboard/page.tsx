@@ -3,10 +3,12 @@ import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { PulsesChart } from "@/components/dashboard/pulses-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUserWithOrg, getOrgMemberCount } from "@/lib/organizations";
-import { getStatusCounts } from "@/lib/pulses";
+import { getMemberWorkload, getPulsesOverTime, getStatusCounts } from "@/lib/pulses";
 import { getGreeting } from "@/lib/utils/greeting";
 import { Zap, Users, CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { WorkloadChart } from "@/components/dashboard/workload-chart";
+import { TimelineChart } from "@/components/dashboard/timeline-chart";
 
 export const metadata = { title: "Dashboard" };
 
@@ -66,6 +68,20 @@ async function DashboardChart() {
   return <PulsesChart data={statusCounts} />;
 }
 
+async function DashboardWorkload() {
+  const ctx = await getCurrentUserWithOrg();
+  if (!ctx) return null;
+  const data = await getMemberWorkload(ctx.orgId);
+  return <WorkloadChart data={data} />;
+}
+
+async function DashboardTimeline() {
+  const ctx = await getCurrentUserWithOrg();
+  if (!ctx) return null;
+  const data = await getPulsesOverTime(ctx.orgId);
+  return <TimelineChart data={data} />;
+}
+
 function StatsSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-pulse">
@@ -107,6 +123,14 @@ export default async function DashboardPage() {
 
       <Suspense fallback={<ChartSkeleton />}>
         <DashboardChart />
+      </Suspense>
+
+      <Suspense fallback={<ChartSkeleton />}>
+        <DashboardWorkload />
+      </Suspense>
+
+      <Suspense fallback={<ChartSkeleton />}>
+        <DashboardTimeline />
       </Suspense>
 
       <Card className="shadow-none border-gray-200">
