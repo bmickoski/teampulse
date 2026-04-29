@@ -12,12 +12,14 @@ export default async function ActivityPage() {
   const ctx = await getCurrentUserWithOrg();
   if (!ctx) notFound();
 
-  const initialData = await db
-    .select()
-    .from(activityLogsTable)
-    .where(eq(activityLogsTable.organizationId, ctx.orgId))
-    .orderBy(desc(activityLogsTable.createdAt))
-    .limit(ACTIVITY_PAGE_SIZE);
+  const initialData = (
+    await db
+      .select()
+      .from(activityLogsTable)
+      .where(eq(activityLogsTable.organizationId, ctx.orgId))
+      .orderBy(desc(activityLogsTable.createdAt))
+      .limit(ACTIVITY_PAGE_SIZE)
+  ).map((log) => ({ ...log, createdAt: log.createdAt.toISOString() }));
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
