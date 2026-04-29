@@ -3,12 +3,20 @@ import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { PulsesChart } from "@/components/dashboard/pulses-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUserWithOrg, getOrgMemberCount } from "@/lib/organizations";
-import { getMemberWorkload, getPulsesOverTime, getStatusCounts } from "@/lib/pulses";
+import {
+  getMemberWorkload,
+  getPulsesOverTime,
+  getStatusCounts,
+} from "@/lib/pulses";
 import { getGreeting } from "@/lib/utils/greeting";
 import { Zap, Users, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { WorkloadChart } from "@/components/dashboard/workload-chart";
 import { TimelineChart } from "@/components/dashboard/timeline-chart";
+import { db } from "@/db";
+import { usersTable } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { DashboardLayoutPicker } from "@/components/dashboard/dashboard-layout-picker";
 
 export const metadata = { title: "Dashboard" };
 
@@ -17,6 +25,7 @@ async function DashboardStats() {
     getStatusCounts(),
     getCurrentUserWithOrg(),
   ]);
+
   const memberCount = ctx?.orgId ? await getOrgMemberCount(ctx.orgId) : 0;
   const activePulses =
     statusCounts.find((s) => s.status === "active")?.count ?? 0;
@@ -105,7 +114,15 @@ function ChartSkeleton() {
 export default async function DashboardPage() {
   const ctx = await getCurrentUserWithOrg();
   const user = ctx?.user;
+  const userRow = ctx
+    ? await db
+        .select({ dashboardLayout: usersTable.dashboardLayout })
+        .from(usersTable)
+        .where(eq(usersTable.id, String(ctx.user.id)))
+        .then((r) => r[0])
+    : null;
 
+  const layout = userRow?.dashboardLayout ?? ["status", "workload", "timeline"];
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <div>
@@ -121,17 +138,34 @@ export default async function DashboardPage() {
         <DashboardStats />
       </Suspense>
 
-      <Suspense fallback={<ChartSkeleton />}>
-        <DashboardChart />
-      </Suspense>
+      <DashboardLayoutPicker initialLayout={layout} />
 
-      <Suspense fallback={<ChartSkeleton />}>
-        <DashboardWorkload />
-      </Suspense>
-
-      <Suspense fallback={<ChartSkeleton />}>
-        <DashboardTimeline />
-      </Suspense>
+      {layout.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-gray-200 rounded-xl">
+          <p className="text-sm text-gray-400">No charts selected</p>
+          <p className="text-xs text-gray-400 mt-1">
+            Click <span className="font-medium text-gray-500">Customize</span> to configure your dashboard
+          </p>
+        </div>
+      ) : (
+        <>
+          {layout.includes("status") && (
+            <Suspense fallback={<ChartSkeleton />}>
+              <DashboardChart />
+            </Suspense>
+          )}
+          {layout.includes("workload") && (
+            <Suspense fallback={<ChartSkeleton />}>
+              <DashboardWorkload />
+            </Suspense>
+          )}
+          {layout.includes("timeline") && (
+            <Suspense fallback={<ChartSkeleton />}>
+              <DashboardTimeline />
+            </Suspense>
+          )}
+        </>
+      )}
 
       <Card className="shadow-none border-gray-200">
         <CardHeader className="flex flex-row items-center justify-between">
