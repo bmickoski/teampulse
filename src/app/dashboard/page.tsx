@@ -6,6 +6,7 @@ import { getCurrentUserWithOrg, getOrgMemberCount } from "@/lib/organizations";
 import { getStatusCounts } from "@/lib/pulses";
 import { getGreeting } from "@/lib/utils/greeting";
 import { Zap, Users, CheckCircle } from "lucide-react";
+import Link from "next/link";
 
 export const metadata = { title: "Dashboard" };
 
@@ -109,10 +110,16 @@ export default async function DashboardPage() {
       </Suspense>
 
       <Card className="shadow-none border-gray-200">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium text-gray-700">
             Recent activity
           </CardTitle>
+          <Link
+            href="/dashboard/activity"
+            className="text-xs text-indigo-600 hover:underline"
+          >
+            View all →
+          </Link>
         </CardHeader>
         <CardContent>
           <ActivityFeed />
