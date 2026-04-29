@@ -19,6 +19,11 @@ export default async function NotificationsPage() {
     .orderBy(desc(notificationsTable.createdAt))
     .limit(NOTIFICATIONS_PAGE_SIZE);
 
+  const serialized = notifications.map((n) => ({
+    ...n,
+    createdAt: n.createdAt.toISOString(),
+  }));
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
@@ -27,7 +32,7 @@ export default async function NotificationsPage() {
           {notifications.length} notification{notifications.length !== 1 ? "s" : ""}
         </p>
       </div>
-      <NotificationsList initialData={notifications} />
+      <NotificationsList initialData={serialized} />
     </div>
   );
 }
