@@ -53,6 +53,19 @@ export const activityLogsTable = pgTable("activity_logs", {
     { onDelete: "cascade" },
   ),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  pulseId: uuid("pulse_id").references(() => pulsesTable.id, { onDelete: "set null" }),
+  pulseId: uuid("pulse_id").references(() => pulsesTable.id, {
+    onDelete: "set null",
+  }),
+});
 
+export const pulseCommentsTable = pgTable("pulse_comments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  pulseId: uuid("pulse_id")
+    .notNull()
+    .references(() => pulsesTable.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "set null" }),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });

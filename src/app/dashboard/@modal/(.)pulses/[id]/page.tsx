@@ -2,6 +2,7 @@ import { PulseModal } from "@/components/dashboard/pulse-modal";
 import { db } from "@/db";
 import { activityLogsTable, pulsesTable, usersTable } from "@/db/schema";
 import { getCurrentUserWithOrg } from "@/lib/organizations";
+import { getPulseComments } from "@/lib/pulses";
 import { desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
@@ -14,7 +15,7 @@ export default async function PulseModalPage({
   const ctx = await getCurrentUserWithOrg();
   if (!ctx) notFound();
 
-  const [result, history] = await Promise.all([
+  const [result, history, initialComments] = await Promise.all([
     db
       .select({
         id: pulsesTable.id,
@@ -38,9 +39,17 @@ export default async function PulseModalPage({
       .from(activityLogsTable)
       .where(eq(activityLogsTable.pulseId, id))
       .orderBy(desc(activityLogsTable.createdAt)),
+    getPulseComments(id),
   ]);
 
   if (!result || result.organizationId !== ctx.orgId) notFound();
 
-  return <PulseModal result={result} history={history} />;
+  return (
+    <PulseModal
+      result={result}
+      history={history}
+      initialComments={initialComments}
+      authorName={ctx.user.name ?? "You"}
+    />
+  );
 }

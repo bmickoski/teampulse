@@ -45,7 +45,7 @@ export function ActivityFeed() {
     );
 
   return (
-    <ul className="space-y-3">
+    <ul className="space-y-3 max-h-72 overflow-y-auto pr-1">
       {logs.map((log) => {
         const Icon = iconMap[log.action] ?? ClipboardList;
         return (

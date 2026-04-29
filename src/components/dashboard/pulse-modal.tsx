@@ -9,6 +9,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CalendarDays, User } from "lucide-react";
+import { PulseComments } from "@/components/dashboard/pulse-comments";
+import type { getPulseComments } from "@/lib/pulses";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "../ui/accordion";
 
 const statusColor = {
   active: "bg-green-100 text-green-700",
@@ -17,9 +25,11 @@ const statusColor = {
 } as const;
 
 type HistoryEntry = { id: string; message: string; createdAt: Date };
+type Comment = Awaited<ReturnType<typeof getPulseComments>>[number];
 
 type Props = {
   result: {
+    id: string;
     title: string;
     description: string | null;
     status: string;
@@ -27,14 +37,21 @@ type Props = {
     creatorName: string | null;
   };
   history: HistoryEntry[];
+  initialComments: Comment[];
+  authorName: string;
 };
 
-export function PulseModal({ result, history }: Props) {
+export function PulseModal({
+  result,
+  history,
+  initialComments,
+  authorName,
+}: Props) {
   const router = useRouter();
 
   return (
     <Dialog open onOpenChange={() => router.back()}>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
         <DialogHeader className="space-y-3">
           <Badge
             className={statusColor[result.status as keyof typeof statusColor]}
@@ -66,28 +83,44 @@ export function PulseModal({ result, history }: Props) {
           </>
         )}
 
-        {history.length > 0 && (
-          <>
-            <Separator />
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">History</p>
-              <ul className="space-y-2">
-                {history.map((entry) => (
-                  <li key={entry.id} className="text-sm">
-                    <p className="text-gray-700">{entry.message}</p>
-                    <p className="text-xs text-gray-400">
-                      {new Date(entry.createdAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </>
-        )}
+        <Separator />
+        <Accordion>
+          <AccordionItem value="history">
+            <AccordionTrigger>History ({history.length})</AccordionTrigger>
+            <AccordionContent>
+              {history.length === 0 ? (
+                <p className="text-sm text-gray-400">No history yet.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {history.map((entry) => (
+                    <li key={entry.id} className="text-sm">
+                      <p className="text-gray-700">{entry.message}</p>
+                      <p className="text-xs text-gray-400">
+                        {new Date(entry.createdAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="comments">
+            <AccordionTrigger>
+              Comments ({initialComments.length})
+            </AccordionTrigger>
+            <AccordionContent>
+              <PulseComments
+                pulseId={result.id}
+                initialComments={initialComments}
+                authorName={authorName}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </DialogContent>
     </Dialog>
   );

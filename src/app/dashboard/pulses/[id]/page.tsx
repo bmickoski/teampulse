@@ -8,6 +8,8 @@ import { desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { CalendarDays, User } from "lucide-react";
 import Link from "next/link";
+import { getPulseComments } from "@/lib/pulses";
+import { PulseComments } from "@/components/dashboard/pulse-comments";
 
 const statusColor = {
   active: "bg-green-100 text-green-700",
@@ -49,6 +51,8 @@ export default async function PulseDetailPage({
     .from(activityLogsTable)
     .where(eq(activityLogsTable.pulseId, id))
     .orderBy(desc(activityLogsTable.createdAt));
+
+  const comments = await getPulseComments(id);
 
   if (!result || result.organizationId !== ctx?.orgId) notFound();
 
@@ -129,6 +133,20 @@ export default async function PulseDetailPage({
           </CardContent>
         </Card>
       )}
+      <Card className="shadow-none border-gray-200">
+        <CardHeader>
+          <CardTitle className="text-sm font-medium text-gray-700">
+            Comments
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PulseComments
+            pulseId={id}
+            initialComments={comments}
+            authorName={ctx.user.name ?? "You"}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }
