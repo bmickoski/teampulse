@@ -1,19 +1,17 @@
 import { db } from "@/db";
 import { pulseAssignmentsTable, pulsesTable } from "@/db/schema";
-import { getCurrentUser } from "@/lib/auth";
 import { desc, eq, isNull, and, inArray } from "drizzle-orm";
 import { PULSES_PAGE_SIZE } from "@/lib/constants";
 import { redirect } from "next/navigation";
 import PulsesList from "./pulses-list";
-import { getOrgMembers, getUserOrganization } from "@/lib/organizations";
+import { getCurrentUserWithOrg, getOrgMembers } from "@/lib/organizations";
 
 export const metadata = { title: "Pulses" };
 
 export default async function PulsesPage() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/sign-in");
-  const orgId = await getUserOrganization(String(user.id));
-  if (!orgId) redirect("/create-organization");
+  const ctx = await getCurrentUserWithOrg();
+  if (!ctx) redirect("/sign-in");
+  const { orgId, role } = ctx;
 
   const pulses = await db
     .select()
@@ -42,5 +40,5 @@ export default async function PulsesPage() {
       .map((a) => a.userId),
   }));
 
-  return <PulsesList initialData={initialData} members={members} />;
+  return <PulsesList initialData={initialData} members={members} role={role} />;
 }

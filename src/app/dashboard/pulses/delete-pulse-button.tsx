@@ -5,6 +5,7 @@ import { pulseDeleteAction } from "@/lib/actions/pulses";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { type Pulse } from "@/lib/types";
+import { toast } from "sonner";
 
 export function DeletePulseButton({ pulseId }: { pulseId: string }) {
   const queryClient = useQueryClient();
@@ -26,6 +27,10 @@ export function DeletePulseButton({ pulseId }: { pulseId: string }) {
     },
     onError: (_err, _vars, context) => {
       queryClient.setQueryData(["pulses"], context?.previous);
+      toast.error("Failed to delete pulse.");
+    },
+    onSuccess: () => {
+      toast.success("Pulse deleted.");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["pulses"] });

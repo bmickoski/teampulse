@@ -50,9 +50,11 @@ async function fetchPulses(
 export default function PulsesList({
   initialData,
   members,
+  role,
 }: {
   initialData: Pulse[];
   members: Member[] | null;
+  role: "owner" | "member";
 }) {
   const router = useRouter();
   const [status, setStatus] = useQueryState(
@@ -92,7 +94,7 @@ export default function PulsesList({
             organization
           </p>
         </div>
-        <CreatePulseDialog />
+        {role === "owner" && <CreatePulseDialog />}
       </div>
 
       <div className="flex gap-2">
@@ -192,13 +194,15 @@ export default function PulsesList({
                     </div>
                   )}
 
-                  <CardAction
-                    className="flex items-center gap-2"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <EditPulseDialog {...pulse} members={members} />
-                    <DeletePulseButton pulseId={pulse.id} />
-                  </CardAction>
+                  {role === "owner" && (
+                    <CardAction
+                      className="flex items-center gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <EditPulseDialog {...pulse} members={members} />
+                      <DeletePulseButton pulseId={pulse.id} />
+                    </CardAction>
+                  )}
                 </CardHeader>
               </Card>
             ))}

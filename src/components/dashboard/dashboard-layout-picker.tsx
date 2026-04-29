@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { saveDashboardLayout } from "@/lib/actions/dashboardLayout";
 import { Settings2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +42,7 @@ export function DashboardLayoutPicker({ initialLayout }: Props) {
     startTransition(async () => {
       await saveDashboardLayout(draft);
       setOpen(false);
+      toast.success("Dashboard saved.");
     });
   };
 
