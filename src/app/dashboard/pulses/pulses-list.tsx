@@ -5,8 +5,9 @@ import { Card, CardAction, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeletePulseButton } from "./delete-pulse-button";
 import { CreatePulseDialog } from "./create-pulse-dialog";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { EditPulseDialog } from "./edit-pulse-dialog";
-import { useQueryState, parseAsStringLiteral } from "nuqs";
+import { useQueryState, parseAsStringLiteral, parseAsString } from "nuqs";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
@@ -37,8 +38,11 @@ type PulsesPage = {
 async function fetchPulses(
   page: number,
   status: StatusFilter,
+  q: string,
 ): Promise<PulsesPage> {
-  const response = await fetch(`/api/pulses?page=${page}&status=${status}`);
+  const response = await fetch(
+    `/api/pulses?page=${page}&status=${status}&q=${encodeURIComponent(q)}`,
+  );
   if (!response.ok) throw new Error("Failed to fetch pulses");
   return response.json();
 }
@@ -55,11 +59,18 @@ export default function PulsesList({
     "status",
     parseAsStringLiteral(STATUS_OPTIONS).withDefault("all"),
   );
+  const [search, setSearch] = useQueryState("q", parseAsString.withDefault(""));
+  const [inputValue, setInputValue] = useState(search);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(inputValue || null), 300);
+    return () => clearTimeout(timer);
+  }, [inputValue, setSearch]);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
-      queryKey: ["pulses", status],
-      queryFn: ({ pageParam }) => fetchPulses(pageParam, status),
+      queryKey: ["pulses", status, search],
+      queryFn: ({ pageParam }) => fetchPulses(pageParam, status, search),
       initialPageParam: 1,
       getNextPageParam: (lastPage) =>
         lastPage.hasMore ? lastPage.page + 1 : undefined,
@@ -98,6 +109,15 @@ export default function PulsesList({
             {s}
           </button>
         ))}
+      </div>
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search pulses..."
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        />
       </div>
 
       {pulses.length === 0 ? (

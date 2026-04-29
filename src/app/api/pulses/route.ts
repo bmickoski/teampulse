@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { pulseAssignmentsTable, pulsesTable } from "@/db/schema";
 import { getCurrentUserWithOrg } from "@/lib/organizations";
-import { desc, isNull, and, eq, count, inArray } from "drizzle-orm";
+import { desc, isNull, and, eq, count, inArray, or, like } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 import { PULSES_PAGE_SIZE as PAGE_SIZE } from "@/lib/constants";
@@ -20,6 +20,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get("page") ?? "1");
   const status = searchParams.get("status") ?? "all";
+  const q = searchParams.get("q")?.trim() ?? "";
 
   let myPulseIds: string[] = [];
   if (status === "mine") {
@@ -38,6 +39,7 @@ export async function GET(request: Request) {
         isNull(pulsesTable.deletedAt),
         eq(pulsesTable.organizationId, ctx.orgId),
         statusFilter(status, myPulseIds),
+        q ? or(like(pulsesTable.title, `%${q}%`), like(pulsesTable.description, `%${q}%`)) : undefined,
       ),
     )
     .orderBy(desc(pulsesTable.createdAt))
@@ -69,6 +71,7 @@ export async function GET(request: Request) {
         isNull(pulsesTable.deletedAt),
         eq(pulsesTable.organizationId, ctx.orgId),
         statusFilter(status, myPulseIds),
+        q ? or(like(pulsesTable.title, `%${q}%`), like(pulsesTable.description, `%${q}%`)) : undefined,
       ),
     );
 
