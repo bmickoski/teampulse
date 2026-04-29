@@ -14,6 +14,7 @@ import {
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm/sql/expressions/conditions";
 import { getUserOrganization } from "../organizations";
+import { createNotifications } from "../notifications";
 
 export async function pulsesAction(
   _prev: PulsesActionState,
@@ -152,6 +153,13 @@ export async function pulseEditAction(
     });
 
     const userIds = formData.getAll("userId") as string[];
+
+    const previousAssignees = await db
+      .select({ userId: pulseAssignmentsTable.userId })
+      .from(pulseAssignmentsTable)
+      .where(eq(pulseAssignmentsTable.pulseId, pulseId));
+    const previousIds = previousAssignees.map((a) => a.userId);
+
     await db
       .delete(pulseAssignmentsTable)
       .where(eq(pulseAssignmentsTable.pulseId, pulseId));
@@ -161,6 +169,24 @@ export async function pulseEditAction(
         .insert(pulseAssignmentsTable)
         .values(userIds.map((userId) => ({ pulseId, userId })));
     }
+
+    const newlyAssigned = userIds.filter(
+      (id) => !previousIds.includes(id) && id !== loggedUser,
+    );
+    await createNotifications(
+      newlyAssigned,
+      `You were assigned to "${title}"`,
+      pulseId,
+    );
+
+    const removed = previousIds.filter(
+      (id) => !userIds.includes(id) && id !== loggedUser,
+    );
+    await createNotifications(
+      removed,
+      `You were removed from "${title}"`,
+      pulseId,
+    );
 
     return { success: true };
   } catch {

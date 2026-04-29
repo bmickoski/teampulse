@@ -4,11 +4,13 @@ import { count, eq } from "drizzle-orm";
 import { getCurrentUser } from "./auth";
 
 export async function getUserOrganization(userId: string) {
-  const membership = await db
+  const memberships = await db
     .select()
     .from(membershipsTable)
-    .where(eq(membershipsTable.userId, userId))
-    .then((r) => r[0]);
+    .where(eq(membershipsTable.userId, userId));
+
+  const membership =
+    memberships.find((m) => m.role !== "owner") ?? memberships[0];
   return membership?.organizationId ?? null;
 }
 
@@ -24,11 +26,14 @@ export async function getCurrentUserWithOrg() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const membership = await db
+  const memberships = await db
     .select()
     .from(membershipsTable)
-    .where(eq(membershipsTable.userId, String(user.id)))
-    .then((r) => r[0]);
+    .where(eq(membershipsTable.userId, String(user.id)));
+
+  // prefer invited (member) membership over own org (owner)
+  const membership =
+    memberships.find((m) => m.role !== "owner") ?? memberships[0];
 
   if (!membership) return null;
 

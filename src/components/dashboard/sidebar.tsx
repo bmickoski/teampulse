@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useUser } from "@/context/user-context";
+import { NotificationBell } from "./notification-bell";
 
 export function Sidebar() {
   const isCollapsed = useSidebarStore((state) => state.isCollapsed);
@@ -40,6 +41,7 @@ export function Sidebar() {
             <p className="text-xs text-gray-500 truncate">{user.email}</p>
           </div>
         )}
+        <NotificationBell />
         <button
           onClick={() => signOut({ callbackUrl: "/sign-in" })}
           className="shrink-0 text-gray-400 hover:text-gray-700 transition-colors"

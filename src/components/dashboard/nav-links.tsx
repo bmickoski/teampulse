@@ -2,12 +2,13 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSidebarStore } from "@/lib/stores/sidebar";
-import { PanelLeft, LayoutDashboard, Zap, Users, Settings, Activity } from "lucide-react";
+import { PanelLeft, LayoutDashboard, Zap, Users, Settings, Activity, Bell } from "lucide-react";
 
 const links = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { title: "Pulses", href: "/dashboard/pulses", icon: Zap },
   { title: "Activity", href: "/dashboard/activity", icon: Activity },
+  { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { title: "Team", href: "/dashboard/team", icon: Users },
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
 ];

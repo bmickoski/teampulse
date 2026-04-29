@@ -5,6 +5,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
@@ -92,3 +93,16 @@ export const pulseAssignmentsTable = pgTable(
   },
   (table) => [uniqueIndex("pulse_user_unique").on(table.pulseId, table.userId)],
 );
+
+export const notificationsTable = pgTable("notifications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  pulseId: uuid("pulse_id").references(() => pulsesTable.id, {
+    onDelete: "cascade",
+  }),
+  message: text("message").notNull(),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
