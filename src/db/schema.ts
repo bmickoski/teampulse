@@ -39,6 +39,7 @@ export const pulsesTable = pgTable("pulses", {
     onDelete: "set null",
   }),
   deletedAt: timestamp("deleted_at"),
+  dueDate: timestamp("due_date"),
 });
 
 export const activityLogsTable = pgTable("activity_logs", {

@@ -25,6 +25,7 @@ export default async function PulseModalPage({
         createdAt: pulsesTable.createdAt,
         creatorName: usersTable.name,
         organizationId: pulsesTable.organizationId,
+        dueDate: pulsesTable.dueDate,
       })
       .from(pulsesTable)
       .leftJoin(usersTable, eq(pulsesTable.createdById, usersTable.id))

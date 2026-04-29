@@ -10,6 +10,7 @@ import { CalendarDays, User } from "lucide-react";
 import Link from "next/link";
 import { getPulseComments } from "@/lib/pulses";
 import { PulseComments } from "@/components/dashboard/pulse-comments";
+import { isOverdue } from "@/lib/utils/time";
 
 const statusColor = {
   active: "bg-green-100 text-green-700",
@@ -36,6 +37,7 @@ export default async function PulseDetailPage({
       createdAt: pulsesTable.createdAt,
       creatorName: usersTable.name,
       organizationId: pulsesTable.organizationId,
+      dueDate: pulsesTable.dueDate,
     })
     .from(pulsesTable)
     .leftJoin(usersTable, eq(pulsesTable.createdById, usersTable.id))
@@ -79,7 +81,7 @@ export default async function PulseDetailPage({
           <CardTitle className="text-2xl font-bold text-gray-900">
             {result.title}
           </CardTitle>
-          <div className="flex items-center gap-4 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400">
             <span className="flex items-center gap-1">
               <User size={12} />
               {result.creatorName ?? "Unknown"}
@@ -92,6 +94,20 @@ export default async function PulseDetailPage({
                 day: "numeric",
               })}
             </span>
+            {result.dueDate && (
+              <span className="flex items-center gap-1">
+                <CalendarDays size={12} />
+                Due{" "}
+                {new Date(result.dueDate).toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+                {isOverdue(result.dueDate, result.status) && (
+                  <span className="font-medium text-red-600 ml-1">· Overdue</span>
+                )}
+              </span>
+            )}
           </div>
         </CardHeader>
 

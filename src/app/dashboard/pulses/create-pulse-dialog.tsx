@@ -4,7 +4,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { pulsesAction } from "@/lib/actions/pulses";
-import { pulsesFormSchema, type PulsesFormValues } from "@/lib/validations/pulses";
+import {
+  pulsesFormSchema,
+  type PulsesFormValues,
+} from "@/lib/validations/pulses";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +41,7 @@ export function CreatePulseDialog() {
     const formData = new FormData();
     formData.append("title", data.title);
     if (data.description) formData.append("description", data.description);
+    if (data.dueDate) formData.append("dueDate", data.dueDate);
     const result = await pulsesAction({}, formData);
     if (result.error) {
       toast.error(result.error);
@@ -82,8 +86,20 @@ export function CreatePulseDialog() {
               />
             </div>
 
+            <div className="space-y-1.5">
+              <Label htmlFor="dueDate">
+                Due date{" "}
+                <span className="text-gray-400 text-xs">(optional)</span>
+              </Label>
+              <Input id="dueDate" type="date" {...register("dueDate")} />
+            </div>
+
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>

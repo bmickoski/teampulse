@@ -20,6 +20,7 @@ const STATUS_OPTIONS = ["all", "active", "completed", "archived"] as const;
 type StatusFilter = (typeof STATUS_OPTIONS)[number];
 
 import { type Pulse } from "@/lib/types";
+import { isOverdue } from "@/lib/utils/time";
 
 type PulsesPage = {
   pulses: Pulse[];
@@ -114,7 +115,27 @@ export default function PulsesList({ initialData }: { initialData: Pulse[] }) {
                   <CardTitle className="text-base mt-2">
                     {pulse.title}
                   </CardTitle>
-                  <CardAction className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  {pulse.dueDate && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-gray-400">
+                        Due{" "}
+                        {new Date(pulse.dueDate).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
+                      {isOverdue(pulse.dueDate, pulse.status) && (
+                        <span className="text-xs font-medium text-red-600 bg-red-50 px-1.5 py-0.5 rounded-full">
+                          Overdue
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <CardAction
+                    className="flex items-center gap-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <EditPulseDialog {...pulse} />
                     <DeletePulseButton pulseId={pulse.id} />
                   </CardAction>

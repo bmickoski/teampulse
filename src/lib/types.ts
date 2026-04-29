@@ -3,6 +3,7 @@ export type Pulse = {
   title: string;
   description: string | null;
   status: string;
+  dueDate: Date | null;
 };
 
 export type ActivityLog = {

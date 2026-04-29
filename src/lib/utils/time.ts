@@ -8,3 +8,8 @@ export function relativeTime(date: string): string {
   if (abs < 86400) return rtf.format(Math.round(diff / 3600), "hour");
   return rtf.format(Math.round(diff / 86400), "day");
 }
+
+export function isOverdue(dueDate: Date | null, status: string): boolean {
+  if (!dueDate || status === "completed" || status === "archived") return false;
+  return new Date(dueDate) < new Date();
+}

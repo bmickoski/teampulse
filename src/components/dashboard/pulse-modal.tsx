@@ -17,6 +17,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
+import { isOverdue } from "@/lib/utils/time";
 
 const statusColor = {
   active: "bg-green-100 text-green-700",
@@ -35,6 +36,7 @@ type Props = {
     status: string;
     createdAt: Date;
     creatorName: string | null;
+    dueDate: Date | null;
   };
   history: HistoryEntry[];
   initialComments: Comment[];
@@ -59,7 +61,7 @@ export function PulseModal({
             {result.status}
           </Badge>
           <DialogTitle className="text-xl">{result.title}</DialogTitle>
-          <div className="flex items-center gap-4 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400">
             <span className="flex items-center gap-1">
               <User size={12} /> {result.creatorName ?? "Unknown"}
             </span>
@@ -71,6 +73,20 @@ export function PulseModal({
                 day: "numeric",
               })}
             </span>
+            {result.dueDate && (
+              <span className="flex items-center gap-1">
+                <CalendarDays size={12} />
+                Due{" "}
+                {new Date(result.dueDate).toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+                {isOverdue(result.dueDate, result.status) && (
+                  <span className="font-medium text-red-600 ml-1">· Overdue</span>
+                )}
+              </span>
+            )}
           </div>
         </DialogHeader>
 

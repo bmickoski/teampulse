@@ -5,7 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { pulseEditAction } from "@/lib/actions/pulses";
 import { type Pulse } from "@/lib/types";
-import { pulsesFormSchema, type PulsesFormValues } from "@/lib/validations/pulses";
+import {
+  pulsesFormSchema,
+  type PulsesFormValues,
+} from "@/lib/validations/pulses";
 import {
   Dialog,
   DialogContent,
@@ -26,18 +29,40 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export function EditPulseDialog({ id, title, description, status }: Pulse) {
+function toDateInputValue(date: Date | null): string {
+  if (!date) return "";
+  return new Date(date).toISOString().split("T")[0];
+}
+
+export function EditPulseDialog({
+  id,
+  title,
+  description,
+  status,
+  dueDate,
+}: Pulse) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, control, reset } = useForm<PulsesFormValues>({
     resolver: zodResolver(pulsesFormSchema),
-    defaultValues: { title, description: description ?? "", status: status as PulsesFormValues["status"] },
+    defaultValues: {
+      title,
+      description: description ?? "",
+      status: status as PulsesFormValues["status"],
+      dueDate: toDateInputValue(dueDate),
+    },
   });
 
   useEffect(() => {
-    if (open) reset({ title, description: description ?? "", status: status as PulsesFormValues["status"] });
-  }, [open, title, description, status, reset]);
+    if (open)
+      reset({
+        title,
+        description: description ?? "",
+        status: status as PulsesFormValues["status"],
+        dueDate: toDateInputValue(dueDate),
+      });
+  }, [open, title, description, status, dueDate, reset]);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (formData: FormData) => pulseEditAction({}, formData),
@@ -56,6 +81,7 @@ export function EditPulseDialog({ id, title, description, status }: Pulse) {
     formData.append("title", data.title);
     formData.append("description", data.description ?? "");
     formData.append("status", data.status ?? "active");
+    formData.append("dueDate", data.dueDate ?? "");
     mutate(formData);
     setOpen(false);
   };
@@ -94,6 +120,14 @@ export function EditPulseDialog({ id, title, description, status }: Pulse) {
             </div>
 
             <div className="space-y-1.5">
+              <Label htmlFor="dueDate">
+                Due date{" "}
+                <span className="text-gray-400 text-xs">(optional)</span>
+              </Label>
+              <Input id="dueDate" type="date" {...register("dueDate")} />
+            </div>
+
+            <div className="space-y-1.5">
               <Controller
                 control={control}
                 name="status"
@@ -115,7 +149,11 @@ export function EditPulseDialog({ id, title, description, status }: Pulse) {
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending}>

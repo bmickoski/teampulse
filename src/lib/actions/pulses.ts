@@ -30,20 +30,24 @@ export async function pulsesAction(
       errors: z.flattenError(validationResult.error).fieldErrors,
     };
   }
-  const { title, description, status } = validationResult.data;
+  const { title, description, status, dueDate } = validationResult.data;
 
   try {
     const orgId = await getUserOrganization(loggedUser);
     if (!orgId) {
       return { error: "User does not belong to an organization" };
     }
-    const [insertedPulse] = await db.insert(pulsesTable).values({
-      title,
-      description,
-      status,
-      createdById: loggedUser,
-      organizationId: orgId,
-    }).returning({ id: pulsesTable.id });
+    const [insertedPulse] = await db
+      .insert(pulsesTable)
+      .values({
+        title,
+        description,
+        status,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        createdById: loggedUser,
+        organizationId: orgId,
+      })
+      .returning({ id: pulsesTable.id });
     await db.insert(activityLogsTable).values({
       action: "pulse_created",
       message: `Pulse "${title}" created`,
@@ -117,7 +121,7 @@ export async function pulseEditAction(
       errors: z.flattenError(validationResult.error).fieldErrors,
     };
   }
-  const { title, description, status } = validationResult.data;
+  const { title, description, status, dueDate } = validationResult.data;
 
   try {
     const orgId = await getUserOrganization(loggedUser);
@@ -127,7 +131,12 @@ export async function pulseEditAction(
 
     await db
       .update(pulsesTable)
-      .set({ title, description, status })
+      .set({
+        title,
+        description,
+        status,
+        dueDate: dueDate ? new Date(dueDate) : null,
+      })
       .where(eq(pulsesTable.id, pulseId));
 
     try {
