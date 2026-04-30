@@ -1,10 +1,19 @@
 "use client";
+import { use } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpAction } from "@/lib/actions/auth";
-import { signUpFormSchema, type SignUpFormValues } from "@/lib/validations/auth";
+import {
+  signUpFormSchema,
+  type SignUpFormValues,
+} from "@/lib/validations/auth";
 
-export default function SignUpPage() {
+export default function SignUpPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  const { callbackUrl } = use(searchParams);
   const {
     register,
     handleSubmit,
@@ -12,6 +21,7 @@ export default function SignUpPage() {
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpFormSchema),
+    defaultValues: { callbackUrl: callbackUrl },
   });
 
   const onSubmit = async (data: SignUpFormValues) => {
@@ -19,6 +29,9 @@ export default function SignUpPage() {
     formData.append("name", data.name);
     formData.append("email", data.email);
     formData.append("password", data.password);
+    if (data.callbackUrl) {
+      formData.append("callbackUrl", data.callbackUrl);
+    }
     const result = await signUpAction({}, formData);
     if (result?.errors?.email) {
       setError("email", { message: result.errors.email[0] });
@@ -29,13 +42,23 @@ export default function SignUpPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Create an account</h1>
-          <p className="text-sm text-gray-500 mt-1">{"Start tracking your team's pulse"}</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Create an account
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {"Start tracking your team's pulse"}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          {callbackUrl && (
+            <input type="hidden" {...register("callbackUrl")} />
+          )}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 mb-1.5"
+            >
               Name
             </label>
             <input
@@ -46,12 +69,17 @@ export default function SignUpPage() {
               {...register("name")}
             />
             {errors.name && (
-              <p className="mt-1.5 text-xs text-red-600">{errors.name.message}</p>
+              <p className="mt-1.5 text-xs text-red-600">
+                {errors.name.message}
+              </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1.5"
+            >
               Email
             </label>
             <input
@@ -63,12 +91,17 @@ export default function SignUpPage() {
               {...register("email")}
             />
             {errors.email && (
-              <p className="mt-1.5 text-xs text-red-600">{errors.email.message}</p>
+              <p className="mt-1.5 text-xs text-red-600">
+                {errors.email.message}
+              </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1.5"
+            >
               Password
             </label>
             <input
@@ -80,7 +113,9 @@ export default function SignUpPage() {
               {...register("password")}
             />
             {errors.password && (
-              <p className="mt-1.5 text-xs text-red-600">{errors.password.message}</p>
+              <p className="mt-1.5 text-xs text-red-600">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
@@ -95,7 +130,10 @@ export default function SignUpPage() {
 
         <p className="mt-6 text-center text-sm text-gray-500">
           Already have an account?{" "}
-          <a href="/sign-in" className="font-semibold text-indigo-600 hover:text-indigo-500">
+          <a
+            href={`/sign-in${callbackUrl ? `?callbackUrl=${callbackUrl}` : ""}`}
+            className="font-semibold text-indigo-600 hover:text-indigo-500"
+          >
             Sign in
           </a>
         </p>

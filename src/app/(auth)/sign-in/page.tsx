@@ -1,10 +1,19 @@
 "use client";
+import { use } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signInAction } from "@/lib/actions/auth";
-import { signInFormSchema, type SignInFormValues } from "@/lib/validations/auth";
+import {
+  signInFormSchema,
+  type SignInFormValues,
+} from "@/lib/validations/auth";
 
-export default function SignInPage() {
+export default function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  const { callbackUrl } = use(searchParams);
   const {
     register,
     handleSubmit,
@@ -12,12 +21,16 @@ export default function SignInPage() {
     formState: { errors, isSubmitting },
   } = useForm<SignInFormValues>({
     resolver: zodResolver(signInFormSchema),
+    defaultValues: { callbackUrl: callbackUrl },
   });
 
   const onSubmit = async (data: SignInFormValues) => {
     const formData = new FormData();
     formData.append("email", data.email);
     formData.append("password", data.password);
+    if (data.callbackUrl) {
+      formData.append("callbackUrl", data.callbackUrl);
+    }
     const result = await signInAction({}, formData);
     if (result?.error) {
       setError("root", { message: result.error });
@@ -29,7 +42,9 @@ export default function SignInPage() {
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="text-sm text-gray-500 mt-1">Sign in to your TeamPulse account</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Sign in to your TeamPulse account
+          </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -39,8 +54,15 @@ export default function SignInPage() {
             </div>
           )}
 
+          {callbackUrl && (
+            <input type="hidden" {...register("callbackUrl")} />
+          )}
+
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1.5"
+            >
               Email
             </label>
             <input
@@ -52,16 +74,24 @@ export default function SignInPage() {
               {...register("email")}
             />
             {errors.email && (
-              <p className="mt-1.5 text-xs text-red-600">{errors.email.message}</p>
+              <p className="mt-1.5 text-xs text-red-600">
+                {errors.email.message}
+              </p>
             )}
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
-              <a href="#" className="text-xs text-indigo-600 hover:text-indigo-500">
+              <a
+                href="#"
+                className="text-xs text-indigo-600 hover:text-indigo-500"
+              >
                 Forgot password?
               </a>
             </div>
@@ -74,7 +104,9 @@ export default function SignInPage() {
               {...register("password")}
             />
             {errors.password && (
-              <p className="mt-1.5 text-xs text-red-600">{errors.password.message}</p>
+              <p className="mt-1.5 text-xs text-red-600">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
@@ -89,7 +121,10 @@ export default function SignInPage() {
 
         <p className="mt-6 text-center text-sm text-gray-500">
           {"Don't have an account?"}{" "}
-          <a href="/sign-up" className="font-semibold text-indigo-600 hover:text-indigo-500">
+          <a
+           className="font-semibold text-indigo-600 hover:text-indigo-500"
+            href={`/sign-up${callbackUrl ? `?callbackUrl=${callbackUrl}` : ""}`}
+          >
             Sign up
           </a>
         </p>

@@ -17,10 +17,12 @@ export async function signInAction(
   formData: FormData,
 ): Promise<SignInActionState> {
   try {
+    const callbackUrl = formData.get("callbackUrl") as string | null;
+
     await signIn("credentials", {
       email: formData.get("email"),
       password: formData.get("password"),
-      redirectTo: "/dashboard",
+      redirectTo: callbackUrl ?? "/dashboard",
     });
   } catch (error) {
     if (error instanceof AuthError) {
@@ -35,6 +37,7 @@ export async function signUpAction(
   _prev: SignUpActionState,
   formData: FormData,
 ): Promise<SignUpActionState> {
+  const callbackUrl = formData.get("callbackUrl") as string | null;
   const form = Object.fromEntries(formData);
   const validationResult = signUpFormSchema.safeParse(form);
 
@@ -53,6 +56,10 @@ export async function signUpAction(
     return { errors: { email: ["Email already in use"] } };
   }
 
-  await signIn("credentials", { email, password, redirectTo: "/create-organization" });
+  await signIn("credentials", {
+    email,
+    password,
+    redirectTo: callbackUrl ?? "/create-organization",
+  });
   return {};
 }

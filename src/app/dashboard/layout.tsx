@@ -1,4 +1,5 @@
 import { Dashboard } from "@/components/dashboard/layout";
+import { getCurrentUser } from "@/lib/auth";
 import { getCurrentUserWithOrg, getUserOrgs } from "@/lib/organizations";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -10,12 +11,13 @@ export default async function DashboardLayout({
   children: React.ReactNode;
   modal: React.ReactNode;
 }) {
-  const [ctx, orgs] = await Promise.all([
+  const [user, ctx, orgs] = await Promise.all([
+    getCurrentUser(),
     getCurrentUserWithOrg(),
     getUserOrgs(),
   ]);
-
-  if (!ctx) redirect("/sign-in");
+  if (!user) redirect("/sign-in");
+  if (!ctx) redirect("/create-organization");
   if (!ctx.orgId) redirect("/create-organization");
 
   const initials =

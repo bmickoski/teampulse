@@ -1,6 +1,7 @@
 import { getCurrentUserWithOrg, getOrgMembers } from "@/lib/organizations";
 import { InviteMemberDialog } from "./invite-member-form";
 import { RemoveMemberButton } from "./remove-member-form";
+import { InviteLinkDialog } from "./invite-link-dialog";
 
 export const metadata = { title: "Team" };
 
@@ -21,7 +22,12 @@ export default async function TeamPage() {
           </p>
         </div>
 
-        {isOwner && <InviteMemberDialog />}
+        {isOwner && (
+          <div className="flex items-center gap-2">
+            <InviteLinkDialog />
+            <InviteMemberDialog />
+          </div>
+        )}
       </div>
 
       <div className="space-y-3">
