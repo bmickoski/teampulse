@@ -25,18 +25,18 @@ export function WorkloadChart({ data }: Props) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer width="100%" height={Math.max(data.length * 40, 160)}>
           <BarChart data={data} layout="vertical">
             <XAxis
               type="number"
               allowDecimals={false}
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 11 }}
             />
             <YAxis
               type="category"
               dataKey="name"
-              width={100}
-              tick={{ fontSize: 12 }}
+              width={80}
+              tick={{ fontSize: 11 }}
             />
             <Tooltip />
             <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0]} />

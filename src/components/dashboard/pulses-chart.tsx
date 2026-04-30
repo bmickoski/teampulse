@@ -32,10 +32,10 @@ export function PulsesChart({ data }: Props) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer width="100%" height={180}>
           <BarChart data={data}>
-            <XAxis dataKey="status" tick={{ fontSize: 12 }} />
-            <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+            <XAxis dataKey="status" tick={{ fontSize: 11 }} />
+            <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={30} />
             <Tooltip />
             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
               {data.map((entry) => (

@@ -86,7 +86,7 @@ export default function PulsesList({
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Pulses</h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -97,12 +97,12 @@ export default function PulsesList({
         {role === "owner" && <CreatePulseDialog />}
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {STATUS_OPTIONS.map((s) => (
           <button
             key={s}
             onClick={() => setStatus(s === "all" ? null : s)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize transition-colors whitespace-nowrap shrink-0 ${
               status === s
                 ? "bg-indigo-600 text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -131,7 +131,7 @@ export default function PulsesList({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {pulses.map((pulse) => (
               <Card
                 key={pulse.id}

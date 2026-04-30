@@ -17,12 +17,13 @@ export function NavLinks() {
   const pathname = usePathname();
   const isCollapsed = useSidebarStore((state) => state.isCollapsed);
   const toggle = useSidebarStore((state) => state.toggle);
+  const closeMobile = useSidebarStore((state) => state.closeMobile);
 
   return (
     <>
       <button
         onClick={toggle}
-        className="flex items-center justify-center w-8 h-8 mb-4 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+        className="hidden md:flex items-center justify-center w-9 h-9 mb-4 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
       >
         <PanelLeft size={16} />
       </button>
@@ -35,16 +36,17 @@ export function NavLinks() {
               <Link
                 href={link.href}
                 title={link.title}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isCollapsed ? "justify-center" : ""
+                onClick={closeMobile}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                  isCollapsed ? "md:justify-center" : ""
                 } ${
                   isActive
                     ? "bg-indigo-50 text-indigo-700"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
-                <link.icon size={16} className="shrink-0" />
-                {!isCollapsed && <span>{link.title}</span>}
+                <link.icon size={18} className="shrink-0" />
+                <span className={isCollapsed ? "md:hidden" : ""}>{link.title}</span>
               </Link>
             </li>
           );
