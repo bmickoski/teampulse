@@ -18,14 +18,15 @@ export default async function PulseModalPage({
   const ctx = await getCurrentUserWithOrg();
   if (!ctx) notFound();
 
-  const [result, history, initialComments, assignees] = await Promise.all([
-    getPulse(id),
-    getPulseHistory(id),
-    getPulseComments(id),
-    getAssignees(id),
-  ]);
+  const result = await getPulse(id, ctx.orgId);
 
-  if (!result || result.organizationId !== ctx.orgId) notFound();
+  if (!result) notFound();
+
+  const [history, initialComments, assignees] = await Promise.all([
+    getPulseHistory(id, ctx.orgId),
+    getPulseComments(id, ctx.orgId),
+    getAssignees(id, ctx.orgId),
+  ]);
 
   return (
     <PulseModal

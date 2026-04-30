@@ -5,27 +5,29 @@ import {
   type PulsesActionState,
   pulsesFormSchema,
 } from "../validations/pulses";
-import { getCurrentUser } from "../auth";
 import {
   activityLogsTable,
+  membershipsTable,
   pulseAssignmentsTable,
   pulsesTable,
 } from "@/db/schema";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm/sql/expressions/conditions";
-import { getUserOrganization } from "../organizations";
+import { and, eq, inArray, isNull } from "drizzle-orm";
+import { getCurrentUserWithOrg } from "../organizations";
 import { createNotifications } from "../notifications";
 
 export async function pulsesAction(
   _prev: PulsesActionState,
   formData: FormData,
 ): Promise<PulsesActionState> {
-  const loggedUser = await getCurrentUser().then((user) => user?.id);
-  if (!loggedUser) {
+  const ctx = await getCurrentUserWithOrg();
+  if (!ctx) {
     return {
       error: "Unauthorized",
     };
   }
+  if (ctx.role !== "owner") return { error: "Forbidden" };
+
   const form = Object.fromEntries(formData);
   const validationResult = pulsesFormSchema.safeParse(form);
 
@@ -39,10 +41,6 @@ export async function pulsesAction(
     validationResult.data;
 
   try {
-    const orgId = await getUserOrganization(loggedUser);
-    if (!orgId) {
-      return { error: "User does not belong to an organization" };
-    }
     const [insertedPulse] = await db
       .insert(pulsesTable)
       .values({
@@ -50,16 +48,16 @@ export async function pulsesAction(
         description,
         status,
         dueDate: dueDate ? new Date(dueDate) : null,
-        createdById: loggedUser,
-        organizationId: orgId,
+        createdById: ctx.user.id,
+        organizationId: ctx.orgId,
         priority: priority,
       })
       .returning({ id: pulsesTable.id });
     await db.insert(activityLogsTable).values({
       action: "pulse_created",
       message: `Pulse "${title}" created`,
-      userId: loggedUser,
-      organizationId: orgId,
+      userId: ctx.user.id,
+      organizationId: ctx.orgId,
       pulseId: insertedPulse.id,
     });
     revalidatePath("/dashboard/pulses");
@@ -73,32 +71,43 @@ export async function pulseDeleteAction(
   _prev: PulsesActionState,
   formData: FormData,
 ): Promise<PulsesActionState> {
-  const loggedUser = await getCurrentUser().then((user) => user?.id);
-  if (!loggedUser) return { error: "Unauthorized" };
+  const ctx = await getCurrentUserWithOrg();
+  if (!ctx) return { error: "Unauthorized" };
+  if (ctx.role !== "owner") return { error: "Forbidden" };
 
   const pulseId = formData.get("pulseId") as string;
   if (!pulseId) return { error: "Missing pulse ID" };
 
   try {
-    const orgId = await getUserOrganization(loggedUser);
-    if (!orgId) {
-      return { error: "User does not belong to an organization" };
-    }
     const [pulse] = await db
       .select({ title: pulsesTable.title })
       .from(pulsesTable)
-      .where(eq(pulsesTable.id, pulseId));
+      .where(
+        and(
+          eq(pulsesTable.id, pulseId),
+          eq(pulsesTable.organizationId, ctx.orgId),
+          isNull(pulsesTable.deletedAt),
+        ),
+      );
+
+    if (!pulse) return { error: "Pulse not found" };
 
     await db
       .update(pulsesTable)
       .set({ deletedAt: new Date() })
-      .where(eq(pulsesTable.id, pulseId));
+      .where(
+        and(
+          eq(pulsesTable.id, pulseId),
+          eq(pulsesTable.organizationId, ctx.orgId),
+          isNull(pulsesTable.deletedAt),
+        ),
+      );
 
     await db.insert(activityLogsTable).values({
       action: "pulse_deleted",
-      message: `Pulse "${pulse?.title ?? "Unknown"}" was deleted`,
-      userId: loggedUser,
-      organizationId: orgId,
+      message: `Pulse "${pulse.title}" was deleted`,
+      userId: ctx.user.id,
+      organizationId: ctx.orgId,
       pulseId,
     });
     revalidatePath("/dashboard/pulses");
@@ -112,8 +121,9 @@ export async function pulseEditAction(
   _prev: PulsesActionState,
   formData: FormData,
 ): Promise<PulsesActionState> {
-  const loggedUser = await getCurrentUser().then((user) => user?.id);
-  if (!loggedUser) return { error: "Unauthorized" };
+  const ctx = await getCurrentUserWithOrg();
+  if (!ctx) return { error: "Unauthorized" };
+  if (ctx.role !== "owner") return { error: "Forbidden" };
 
   const form = Object.fromEntries(formData);
 
@@ -132,9 +142,36 @@ export async function pulseEditAction(
     validationResult.data;
 
   try {
-    const orgId = await getUserOrganization(loggedUser);
-    if (!orgId) {
-      return { error: "User does not belong to an organization" };
+    const [pulse] = await db
+      .select({ id: pulsesTable.id })
+      .from(pulsesTable)
+      .where(
+        and(
+          eq(pulsesTable.id, pulseId),
+          eq(pulsesTable.organizationId, ctx.orgId),
+          isNull(pulsesTable.deletedAt),
+        ),
+      );
+
+    if (!pulse) return { error: "Pulse not found" };
+
+    const requestedUserIds = [...new Set(formData.getAll("userId") as string[])];
+    const validAssignees =
+      requestedUserIds.length > 0
+        ? await db
+            .select({ userId: membershipsTable.userId })
+            .from(membershipsTable)
+            .where(
+              and(
+                eq(membershipsTable.organizationId, ctx.orgId),
+                inArray(membershipsTable.userId, requestedUserIds),
+              ),
+            )
+        : [];
+    const userIds = validAssignees.map((assignee) => assignee.userId);
+
+    if (requestedUserIds.length !== userIds.length) {
+      return { error: "Invalid assignees" };
     }
 
     await db
@@ -146,17 +183,21 @@ export async function pulseEditAction(
         dueDate: dueDate ? new Date(dueDate) : null,
         priority: priority,
       })
-      .where(eq(pulsesTable.id, pulseId));
+      .where(
+        and(
+          eq(pulsesTable.id, pulseId),
+          eq(pulsesTable.organizationId, ctx.orgId),
+          isNull(pulsesTable.deletedAt),
+        ),
+      );
 
     await db.insert(activityLogsTable).values({
       action: "pulse_updated",
       message: `Pulse "${title ?? "Unknown"}" was updated`,
-      userId: loggedUser,
-      organizationId: orgId,
+      userId: ctx.user.id,
+      organizationId: ctx.orgId,
       pulseId,
     });
-
-    const userIds = formData.getAll("userId") as string[];
 
     const previousAssignees = await db
       .select({ userId: pulseAssignmentsTable.userId })
@@ -175,21 +216,23 @@ export async function pulseEditAction(
     }
 
     const newlyAssigned = userIds.filter(
-      (id) => !previousIds.includes(id) && id !== loggedUser,
+      (id) => !previousIds.includes(id) && id !== ctx.user.id,
     );
     await createNotifications(
       newlyAssigned,
       `You were assigned to "${title}"`,
       pulseId,
+      "assignment",
     );
 
     const removed = previousIds.filter(
-      (id) => !userIds.includes(id) && id !== loggedUser,
+      (id) => !userIds.includes(id) && id !== ctx.user.id,
     );
     await createNotifications(
       removed,
       `You were removed from "${title}"`,
       pulseId,
+      "assignment",
     );
 
     return { success: true };

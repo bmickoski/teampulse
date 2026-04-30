@@ -10,6 +10,14 @@ import { EditPulseDialog } from "./edit-pulse-dialog";
 import { useQueryState, parseAsStringLiteral, parseAsString } from "nuqs";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { statusColor, priorityColor } from "@/lib/utils/pulse";
 
@@ -19,8 +27,12 @@ const STATUS_OPTIONS = [
   "completed",
   "archived",
   "mine",
+  "overdue",
 ] as const;
 type StatusFilter = (typeof STATUS_OPTIONS)[number];
+
+const PRIORITY_OPTIONS = ["all", "low", "medium", "high"] as const;
+type PriorityFilter = (typeof PRIORITY_OPTIONS)[number];
 
 import { Member, type Pulse } from "@/lib/types";
 import { isOverdue } from "@/lib/utils/time";
@@ -35,13 +47,19 @@ type PulsesPage = {
 async function fetchPulses(
   page: number,
   status: StatusFilter,
+  priority: PriorityFilter,
   q: string,
 ): Promise<PulsesPage> {
   const response = await fetch(
-    `/api/pulses?page=${page}&status=${status}&q=${encodeURIComponent(q)}`,
+    `/api/pulses?page=${page}&status=${status}&priority=${priority}&q=${encodeURIComponent(q)}`,
   );
   if (!response.ok) throw new Error("Failed to fetch pulses");
   return response.json();
+}
+
+function formatFilterLabel(value: string) {
+  if (value === "mine") return "Assigned to me";
+  return value[0].toUpperCase() + value.slice(1);
 }
 
 export default function PulsesList({
@@ -58,6 +76,10 @@ export default function PulsesList({
     "status",
     parseAsStringLiteral(STATUS_OPTIONS).withDefault("all"),
   );
+  const [priority, setPriority] = useQueryState(
+    "priority",
+    parseAsStringLiteral(PRIORITY_OPTIONS).withDefault("all"),
+  );
   const [search, setSearch] = useQueryState("q", parseAsString.withDefault(""));
   const [inputValue, setInputValue] = useState(search);
 
@@ -68,8 +90,9 @@ export default function PulsesList({
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
-      queryKey: ["pulses", status, search],
-      queryFn: ({ pageParam }) => fetchPulses(pageParam, status, search),
+      queryKey: ["pulses", status, priority, search],
+      queryFn: ({ pageParam }) =>
+        fetchPulses(pageParam, status, priority, search),
       initialPageParam: 1,
       getNextPageParam: (lastPage) =>
         lastPage.hasMore ? lastPage.page + 1 : undefined,
@@ -99,31 +122,59 @@ export default function PulsesList({
           <button
             key={s}
             onClick={() => setStatus(s === "all" ? null : s)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize transition-colors whitespace-nowrap shrink-0 ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
               status === s
                 ? "bg-indigo-600 text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
-            {s}
+            {formatFilterLabel(s)}
           </button>
         ))}
       </div>
-      <div className="relative">
+
+      <div className="flex flex-col gap-2 sm:flex-row">
         <input
           type="text"
           placeholder="Search pulses..."
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="min-w-0 flex-1 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
+        <Select
+          value={priority}
+          onValueChange={(value) =>
+            setPriority(value === "all" ? null : (value as PriorityFilter))
+          }
+        >
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue placeholder="Priority">
+              {priority === "all" ? "Any priority" : formatFilterLabel(priority)}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {PRIORITY_OPTIONS.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p === "all" ? "Any priority" : formatFilterLabel(p)}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
 
       {pulses.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-gray-200 rounded-xl">
-          <p className="text-gray-400 text-sm">No pulses yet</p>
+          <p className="text-gray-500 text-sm font-medium">
+            {search || status !== "all" || priority !== "all"
+              ? "No pulses match these filters"
+              : "No pulses yet"}
+          </p>
           <p className="text-gray-400 text-xs mt-1">
-            {'Click "+ New Pulse" to create your first one'}
+            {search || status !== "all" || priority !== "all"
+              ? "Try a different search, status, or priority."
+              : 'Click "+ New Pulse" to create your first one'}
           </p>
         </div>
       ) : (
@@ -135,14 +186,14 @@ export default function PulsesList({
                 className="border-gray-200 shadow-none hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => router.push(`/dashboard/pulses/${pulse.id}`)}
               >
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-3">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <Badge
                       className={
                         statusColor[pulse.status as keyof typeof statusColor]
                       }
                     >
-                      {pulse.status}
+                      {formatFilterLabel(pulse.status)}
                     </Badge>
                     <Badge
                       className={
@@ -152,12 +203,14 @@ export default function PulsesList({
                       }
                     >
                       <ArrowUp size={10} className="mr-0.5" />
-                      {pulse.priority}
+                      {formatFilterLabel(pulse.priority)}
                     </Badge>
                   </div>
-                  <CardTitle className="text-base mt-2">
+
+                  <CardTitle className="text-base leading-snug mt-2 line-clamp-2">
                     {pulse.title}
                   </CardTitle>
+
                   {pulse.dueDate && (
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-gray-400">
@@ -209,7 +262,10 @@ export default function PulsesList({
                       onClick={(e) => e.stopPropagation()}
                     >
                       <EditPulseDialog {...pulse} members={members} />
-                      <DeletePulseButton pulseId={pulse.id} />
+                      <DeletePulseButton
+                        pulseId={pulse.id}
+                        pulseTitle={pulse.title}
+                      />
                     </CardAction>
                   )}
                 </CardHeader>

@@ -1,0 +1,1 @@
+ALTER TABLE "notifications" ADD COLUMN "type" text DEFAULT 'general' NOT NULL;

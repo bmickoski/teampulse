@@ -1,15 +1,37 @@
 import { db } from "@/db";
 import { pulseAssignmentsTable, pulsesTable } from "@/db/schema";
 import { getCurrentUserWithOrg } from "@/lib/organizations";
-import { desc, isNull, and, eq, count, inArray, or, like } from "drizzle-orm";
+import {
+  desc,
+  isNull,
+  and,
+  eq,
+  count,
+  inArray,
+  or,
+  ilike,
+  sql,
+} from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 import { PULSES_PAGE_SIZE as PAGE_SIZE } from "@/lib/constants";
 
 function statusFilter(status: string, myPulseIds: string[]) {
   if (status === "all") return undefined;
-  if (status === "mine") return inArray(pulsesTable.id, myPulseIds);
+  if (status === "mine") {
+    return myPulseIds.length > 0
+      ? inArray(pulsesTable.id, myPulseIds)
+      : sql`false`;
+  }
+  if (status === "overdue") {
+    return sql`${pulsesTable.dueDate} < now() and ${pulsesTable.status} not in ('completed', 'archived')`;
+  }
   return eq(pulsesTable.status, status);
+}
+
+function priorityFilter(priority: string) {
+  if (priority === "all") return undefined;
+  return eq(pulsesTable.priority, priority);
 }
 
 export async function GET(request: Request) {
@@ -20,6 +42,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get("page") ?? "1");
   const status = searchParams.get("status") ?? "all";
+  const priority = searchParams.get("priority") ?? "all";
   const q = searchParams.get("q")?.trim() ?? "";
 
   let myPulseIds: string[] = [];
@@ -39,7 +62,13 @@ export async function GET(request: Request) {
         isNull(pulsesTable.deletedAt),
         eq(pulsesTable.organizationId, ctx.orgId),
         statusFilter(status, myPulseIds),
-        q ? or(like(pulsesTable.title, `%${q}%`), like(pulsesTable.description, `%${q}%`)) : undefined,
+        priorityFilter(priority),
+        q
+          ? or(
+              ilike(pulsesTable.title, `%${q}%`),
+              ilike(pulsesTable.description, `%${q}%`),
+            )
+          : undefined,
       ),
     )
     .orderBy(desc(pulsesTable.createdAt))
@@ -71,7 +100,13 @@ export async function GET(request: Request) {
         isNull(pulsesTable.deletedAt),
         eq(pulsesTable.organizationId, ctx.orgId),
         statusFilter(status, myPulseIds),
-        q ? or(like(pulsesTable.title, `%${q}%`), like(pulsesTable.description, `%${q}%`)) : undefined,
+        priorityFilter(priority),
+        q
+          ? or(
+              ilike(pulsesTable.title, `%${q}%`),
+              ilike(pulsesTable.description, `%${q}%`),
+            )
+          : undefined,
       ),
     );
 

@@ -29,6 +29,7 @@ import {
 
 export function CreatePulseDialog() {
   const [open, setOpen] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const {
@@ -44,7 +45,10 @@ export function CreatePulseDialog() {
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
-    if (!next) reset();
+    if (!next) {
+      reset();
+      setServerError(null);
+    }
   }
 
   const onSubmit = async (data: PulsesFormValues) => {
@@ -55,6 +59,7 @@ export function CreatePulseDialog() {
     if (data.dueDate) formData.append("dueDate", data.dueDate);
     const result = await pulsesAction({}, formData);
     if (result.error) {
+      setServerError(result.error);
       toast.error(result.error);
     } else {
       handleOpenChange(false);
@@ -95,6 +100,11 @@ export function CreatePulseDialog() {
                 className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 {...register("description")}
               />
+              {errors.description && (
+                <p className="text-xs text-red-600">
+                  {errors.description.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -103,16 +113,22 @@ export function CreatePulseDialog() {
                 <span className="text-gray-400 text-xs">(optional)</span>
               </Label>
               <Input id="dueDate" type="date" {...register("dueDate")} />
+              {errors.dueDate && (
+                <p className="text-xs text-red-600">
+                  {errors.dueDate.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1.5">
+              <Label htmlFor="priority">Priority</Label>
               <Controller
                 control={control}
                 name="priority"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Choose status" />
+                    <SelectTrigger id="priority" className="w-full sm:w-[180px]">
+                      <SelectValue placeholder="Choose priority" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
@@ -125,6 +141,10 @@ export function CreatePulseDialog() {
                 )}
               />
             </div>
+
+            {serverError && (
+              <p className="text-xs text-red-600">{serverError}</p>
+            )}
 
             <div className="flex justify-end gap-2 pt-2">
               <Button

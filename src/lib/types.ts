@@ -22,6 +22,12 @@ export type ActivityLog = {
   createdAt: string;
 };
 
+export type NotificationType =
+  | "general"
+  | "comment"
+  | "mention"
+  | "assignment";
+
 export type Member = {
   userId: string;
   role: string;

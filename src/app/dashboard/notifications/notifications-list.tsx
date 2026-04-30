@@ -3,9 +3,13 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { AtSign, Bell, MessageSquare, UserCheck } from "lucide-react";
+import { relativeTime } from "@/lib/utils/time";
+import { type NotificationType } from "@/lib/types";
 
 type Notification = {
   id: string;
+  type: NotificationType;
   message: string;
   pulseId: string | null;
   read: boolean;
@@ -22,6 +26,13 @@ async function fetchNotifications(page: number): Promise<NotificationsPage> {
   const res = await fetch(`/api/notifications?page=${page}`);
   if (!res.ok) throw new Error("Failed to fetch notifications");
   return res.json();
+}
+
+function getNotificationIcon(type: Notification["type"]) {
+  if (type === "mention") return AtSign;
+  if (type === "comment") return MessageSquare;
+  if (type === "assignment") return UserCheck;
+  return Bell;
 }
 
 export default function NotificationsList({
@@ -57,31 +68,42 @@ export default function NotificationsList({
   return (
     <div className="space-y-4">
       <div className="divide-y divide-gray-100 border border-gray-200 rounded-xl overflow-hidden">
-        {notifications.map((n) => (
-          <div
-            key={n.id}
-            onClick={() => n.pulseId && router.push(`/dashboard/pulses/${n.pulseId}`)}
-            className={`flex items-start gap-3 px-4 py-3 text-sm transition-colors ${
-              n.pulseId ? "cursor-pointer hover:bg-gray-50" : ""
-            } ${!n.read ? "bg-indigo-50/40" : "bg-white"}`}
-          >
-            {!n.read && (
-              <span className="mt-1.5 w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
-            )}
-            <div className={!n.read ? "" : "ml-5"}>
-              <p className="text-gray-700">{n.message}</p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {new Date(n.createdAt).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
-            </div>
-          </div>
-        ))}
+        {notifications.map((n) => {
+          const Icon = getNotificationIcon(n.type);
+
+          return (
+            <button
+              key={n.id}
+              type="button"
+              onClick={() =>
+                n.pulseId && router.push(`/dashboard/pulses/${n.pulseId}`)
+              }
+              disabled={!n.pulseId}
+              className={`flex w-full items-start gap-3 px-4 py-3 text-left text-sm transition-colors disabled:cursor-default ${
+                n.pulseId ? "cursor-pointer hover:bg-gray-50" : ""
+              } ${!n.read ? "bg-indigo-50/40" : "bg-white"}`}
+            >
+              <span
+                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                  !n.read
+                    ? "bg-indigo-100 text-indigo-700"
+                    : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                <Icon size={15} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-gray-700">{n.message}</span>
+                <span className="mt-0.5 block text-xs text-gray-400">
+                  {relativeTime(n.createdAt)}
+                </span>
+              </span>
+              {!n.read && (
+                <span className="mt-3 h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {hasNextPage && (

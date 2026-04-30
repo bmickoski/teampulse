@@ -1,7 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PulseModal } from "@/components/dashboard/pulse-modal";
-import { id } from "zod/v4/locales";
 
 const { backMock } = vi.hoisted(() => ({
   backMock: vi.fn(),
@@ -10,6 +9,10 @@ const { backMock } = vi.hoisted(() => ({
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ back: backMock }),
   usePathname: () => "/dashboard/pulses",
+}));
+
+vi.mock("@/components/dashboard/pulse-comments", () => ({
+  PulseComments: () => <div data-testid="pulse-comments" />,
 }));
 
 describe("PulseModal", () => {
@@ -31,8 +34,13 @@ describe("PulseModal", () => {
           status: "active",
           createdAt: new Date("2026-01-15T12:00:00Z"),
           creatorName: "Jane Doe",
+          dueDate: null,
+          priority: "medium",
         }}
         history={[]}
+        initialComments={[]}
+        authorName="Jane Doe"
+        assignees={[]}
       />,
     );
 
@@ -57,8 +65,13 @@ describe("PulseModal", () => {
           status: "completed",
           createdAt: new Date("2026-01-15T12:00:00Z"),
           creatorName: "Jane Doe",
+          dueDate: null,
+          priority: "medium",
         }}
         history={[]}
+        initialComments={[]}
+        authorName="Jane Doe"
+        assignees={[]}
       />,
     );
 
@@ -77,8 +90,13 @@ describe("PulseModal", () => {
           status: "archived",
           createdAt: new Date("2026-01-15T12:00:00Z"),
           creatorName: "Jane Doe",
+          dueDate: null,
+          priority: "medium",
         }}
         history={[]}
+        initialComments={[]}
+        authorName="Jane Doe"
+        assignees={[]}
       />,
     );
 
