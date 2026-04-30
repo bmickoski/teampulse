@@ -1,0 +1,1 @@
+ALTER TABLE "pulses" ADD COLUMN "priority" text DEFAULT 'medium' NOT NULL;

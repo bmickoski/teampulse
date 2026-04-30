@@ -35,7 +35,8 @@ export async function pulsesAction(
       errors: z.flattenError(validationResult.error).fieldErrors,
     };
   }
-  const { title, description, status, dueDate } = validationResult.data;
+  const { title, description, status, dueDate, priority } =
+    validationResult.data;
 
   try {
     const orgId = await getUserOrganization(loggedUser);
@@ -51,6 +52,7 @@ export async function pulsesAction(
         dueDate: dueDate ? new Date(dueDate) : null,
         createdById: loggedUser,
         organizationId: orgId,
+        priority: priority,
       })
       .returning({ id: pulsesTable.id });
     await db.insert(activityLogsTable).values({
@@ -126,7 +128,8 @@ export async function pulseEditAction(
       errors: z.flattenError(validationResult.error).fieldErrors,
     };
   }
-  const { title, description, status, dueDate } = validationResult.data;
+  const { title, description, status, dueDate, priority } =
+    validationResult.data;
 
   try {
     const orgId = await getUserOrganization(loggedUser);
@@ -141,6 +144,7 @@ export async function pulseEditAction(
         description,
         status,
         dueDate: dueDate ? new Date(dueDate) : null,
+        priority: priority,
       })
       .where(eq(pulsesTable.id, pulseId));
 

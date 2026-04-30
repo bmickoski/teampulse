@@ -11,11 +11,7 @@ import { useQueryState, parseAsStringLiteral, parseAsString } from "nuqs";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
-const statusColor = {
-  active: "bg-green-100 text-green-700",
-  completed: "bg-blue-100 text-blue-700",
-  archived: "bg-gray-100 text-gray-600",
-} as const;
+import { statusColor, priorityColor } from "@/lib/utils/pulse";
 
 const STATUS_OPTIONS = [
   "all",
@@ -28,6 +24,7 @@ type StatusFilter = (typeof STATUS_OPTIONS)[number];
 
 import { Member, type Pulse } from "@/lib/types";
 import { isOverdue } from "@/lib/utils/time";
+import { ArrowUp } from "lucide-react";
 
 type PulsesPage = {
   pulses: Pulse[];
@@ -139,13 +136,25 @@ export default function PulsesList({
                 onClick={() => router.push(`/dashboard/pulses/${pulse.id}`)}
               >
                 <CardHeader className="pb-2">
-                  <Badge
-                    className={
-                      statusColor[pulse.status as keyof typeof statusColor]
-                    }
-                  >
-                    {pulse.status}
-                  </Badge>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Badge
+                      className={
+                        statusColor[pulse.status as keyof typeof statusColor]
+                      }
+                    >
+                      {pulse.status}
+                    </Badge>
+                    <Badge
+                      className={
+                        priorityColor[
+                          pulse.priority as keyof typeof priorityColor
+                        ]
+                      }
+                    >
+                      <ArrowUp size={10} className="mr-0.5" />
+                      {pulse.priority}
+                    </Badge>
+                  </div>
                   <CardTitle className="text-base mt-2">
                     {pulse.title}
                   </CardTitle>

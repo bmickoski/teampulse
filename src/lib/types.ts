@@ -4,8 +4,16 @@ export type Pulse = {
   description: string | null;
   status: string;
   dueDate: Date | null;
+  createdAt: Date;
   assigneeIds: string[];
+  priority: Priority;
 };
+
+export type PulseDetail = Omit<Pulse, "assigneeIds"> & {
+  creatorName: string | null;
+};
+
+export type Priority = "low" | "medium" | "high";
 
 export type ActivityLog = {
   id: string;

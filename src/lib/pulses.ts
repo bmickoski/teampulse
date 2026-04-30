@@ -67,6 +67,7 @@ export async function getPulse(id: string) {
       creatorName: usersTable.name,
       organizationId: pulsesTable.organizationId,
       dueDate: pulsesTable.dueDate,
+      priority: pulsesTable.priority,
     })
     .from(pulsesTable)
     .leftJoin(usersTable, eq(pulsesTable.createdById, usersTable.id))
@@ -104,7 +105,9 @@ export async function getMemberWorkload(orgId: string) {
 export async function getPulsesOverTime(orgId: string) {
   return db
     .select({
-      week: sql<string>`date_trunc('week', ${pulsesTable.createdAt})`.as("week"),
+      week: sql<string>`date_trunc('week', ${pulsesTable.createdAt})`.as(
+        "week",
+      ),
       count: count(),
     })
     .from(pulsesTable)

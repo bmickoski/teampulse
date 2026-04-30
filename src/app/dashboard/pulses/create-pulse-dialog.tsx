@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { pulsesAction } from "@/lib/actions/pulses";
@@ -18,6 +18,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function CreatePulseDialog() {
   const [open, setOpen] = useState(false);
@@ -26,10 +34,12 @@ export function CreatePulseDialog() {
   const {
     register,
     handleSubmit,
+    control,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<PulsesFormValues>({
     resolver: zodResolver(pulsesFormSchema),
+    defaultValues: { priority: "medium" },
   });
 
   function handleOpenChange(next: boolean) {
@@ -40,6 +50,7 @@ export function CreatePulseDialog() {
   const onSubmit = async (data: PulsesFormValues) => {
     const formData = new FormData();
     formData.append("title", data.title);
+    formData.append("priority", data.priority ?? "medium");
     if (data.description) formData.append("description", data.description);
     if (data.dueDate) formData.append("dueDate", data.dueDate);
     const result = await pulsesAction({}, formData);
@@ -92,6 +103,27 @@ export function CreatePulseDialog() {
                 <span className="text-gray-400 text-xs">(optional)</span>
               </Label>
               <Input id="dueDate" type="date" {...register("dueDate")} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Controller
+                control={control}
+                name="priority"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Choose status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             <div className="flex justify-end gap-2 pt-2">

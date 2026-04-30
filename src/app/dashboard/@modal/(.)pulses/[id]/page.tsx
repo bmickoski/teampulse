@@ -1,6 +1,12 @@
 import { PulseModal } from "@/components/dashboard/pulse-modal";
 import { getCurrentUserWithOrg } from "@/lib/organizations";
-import { getAssignees, getPulse, getPulseComments, getPulseHistory } from "@/lib/pulses";
+import {
+  getAssignees,
+  getPulse,
+  getPulseComments,
+  getPulseHistory,
+} from "@/lib/pulses";
+import { Priority } from "@/lib/types";
 import { notFound } from "next/navigation";
 
 export default async function PulseModalPage({
@@ -23,7 +29,10 @@ export default async function PulseModalPage({
 
   return (
     <PulseModal
-      result={result}
+      result={{
+        ...result,
+        priority: (result.priority ?? "medium") as Priority,
+      }}
       history={history}
       initialComments={initialComments}
       authorName={ctx.user.name ?? "You"}

@@ -40,6 +40,7 @@ export function EditPulseDialog({
   description,
   status,
   dueDate,
+  priority,
   assigneeIds,
   members,
 }: Pulse & { members: Member[] | null }) {
@@ -54,6 +55,7 @@ export function EditPulseDialog({
       status: status as PulsesFormValues["status"],
       dueDate: toDateInputValue(dueDate),
       assigneeIds: assigneeIds ?? [],
+      priority: priority ?? "medium",
     },
   });
 
@@ -65,8 +67,9 @@ export function EditPulseDialog({
         status: status as PulsesFormValues["status"],
         dueDate: toDateInputValue(dueDate),
         assigneeIds: assigneeIds ?? [],
+        priority: priority,
       });
-  }, [open, title, description, status, dueDate, assigneeIds, reset]);
+  }, [open, title, description, status, dueDate, assigneeIds, priority, reset]);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (formData: FormData) => pulseEditAction({}, formData),
@@ -86,6 +89,7 @@ export function EditPulseDialog({
     formData.append("description", data.description ?? "");
     formData.append("status", data.status ?? "active");
     formData.append("dueDate", data.dueDate ?? "");
+    formData.append("priority", data.priority ?? "medium");
     // remove any existing assigneeIds first,
     // then append each
     data.assigneeIds?.forEach((id) => formData.append("userId", id));
@@ -148,6 +152,27 @@ export function EditPulseDialog({
                         <SelectItem value="active">Active</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="archived">Archived</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Controller
+                control={control}
+                name="priority"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Choose status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>

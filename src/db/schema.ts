@@ -52,6 +52,7 @@ export const pulsesTable = pgTable("pulses", {
   }),
   deletedAt: timestamp("deleted_at"),
   dueDate: timestamp("due_date"),
+  priority: text("priority").notNull().default("medium"),
 });
 
 export const activityLogsTable = pgTable("activity_logs", {

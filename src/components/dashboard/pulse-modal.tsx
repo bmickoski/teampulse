@@ -9,7 +9,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CalendarDays, User } from "lucide-react";
-import { PulseComments } from "@/components/dashboard/pulse-comments";
 import type { getPulseComments } from "@/lib/pulses";
 import {
   Accordion,
@@ -18,26 +17,15 @@ import {
   AccordionTrigger,
 } from "../ui/accordion";
 import { isOverdue } from "@/lib/utils/time";
-
-const statusColor = {
-  active: "bg-green-100 text-green-700",
-  completed: "bg-blue-100 text-blue-700",
-  archived: "bg-gray-100 text-gray-600",
-} as const;
+import { PulseDetail } from "@/lib/types";
+import { PulseComments } from "./pulse-comments";
+import { statusColor, priorityColor } from "@/lib/utils/pulse";
 
 type HistoryEntry = { id: string; message: string; createdAt: Date };
 type Comment = Awaited<ReturnType<typeof getPulseComments>>[number];
 
 type Props = {
-  result: {
-    id: string;
-    title: string;
-    description: string | null;
-    status: string;
-    createdAt: Date;
-    creatorName: string | null;
-    dueDate: Date | null;
-  };
+  result: PulseDetail;
   history: HistoryEntry[];
   initialComments: Comment[];
   authorName: string;
@@ -57,11 +45,21 @@ export function PulseModal({
     <Dialog open onOpenChange={() => router.back()}>
       <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
         <DialogHeader className="space-y-3">
-          <Badge
-            className={statusColor[result.status as keyof typeof statusColor]}
-          >
-            {result.status}
-          </Badge>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Badge
+              className={statusColor[result.status as keyof typeof statusColor]}
+            >
+              {result.status}
+            </Badge>
+            <Badge
+              className={
+                priorityColor[result.priority as keyof typeof priorityColor]
+              }
+            >
+              ↑ {result.priority}
+            </Badge>
+          </div>
+
           <DialogTitle className="text-xl">{result.title}</DialogTitle>
           <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400">
             <span className="flex items-center gap-1">

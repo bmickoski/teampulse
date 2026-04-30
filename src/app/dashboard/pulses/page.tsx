@@ -5,6 +5,7 @@ import { PULSES_PAGE_SIZE } from "@/lib/constants";
 import { redirect } from "next/navigation";
 import PulsesList from "./pulses-list";
 import { getCurrentUserWithOrg, getOrgMembers } from "@/lib/organizations";
+import { Priority } from "@/lib/types";
 
 export const metadata = { title: "Pulses" };
 
@@ -35,6 +36,7 @@ export default async function PulsesPage() {
 
   const initialData = pulses.map((p) => ({
     ...p,
+    priority: (p.priority ?? "medium") as Priority,
     assigneeIds: assignments
       .filter((a) => a.pulseId === p.id)
       .map((a) => a.userId),

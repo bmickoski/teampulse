@@ -5,15 +5,15 @@ import { getCurrentUserWithOrg } from "@/lib/organizations";
 import { notFound } from "next/navigation";
 import { CalendarDays, User } from "lucide-react";
 import Link from "next/link";
-import { getAssignees, getPulse, getPulseComments, getPulseHistory } from "@/lib/pulses";
+import {
+  getAssignees,
+  getPulse,
+  getPulseComments,
+  getPulseHistory,
+} from "@/lib/pulses";
 import { PulseComments } from "@/components/dashboard/pulse-comments";
 import { isOverdue } from "@/lib/utils/time";
-
-const statusColor = {
-  active: "bg-green-100 text-green-700",
-  completed: "bg-blue-100 text-blue-700",
-  archived: "bg-gray-100 text-gray-600",
-} as const;
+import { statusColor, priorityColor } from "@/lib/utils/pulse";
 
 export default async function PulseDetailPage({
   params,
@@ -53,6 +53,13 @@ export default async function PulseDetailPage({
             className={statusColor[result.status as keyof typeof statusColor]}
           >
             {result.status}
+          </Badge>
+          <Badge
+            className={
+              priorityColor[result.priority as keyof typeof priorityColor]
+            }
+          >
+            {result.priority}
           </Badge>
           <CardTitle className="text-2xl font-bold text-gray-900">
             {result.title}

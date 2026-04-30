@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Priority } from "../types";
 
 const statusEnum = z.enum(["active", "completed", "archived"]);
 
@@ -11,9 +12,10 @@ export const pulsesFormSchema = z.object({
   status: statusEnum.optional(),
   dueDate: z.string().optional(),
   assigneeIds: z.array(z.string()).optional(),
+  priority: z.enum(["low", "medium", "high"]).default("medium"),
 });
 
-export type PulsesFormValues = z.infer<typeof pulsesFormSchema>;
+export type PulsesFormValues = z.input<typeof pulsesFormSchema>;
 
 export type PulsesActionState = {
   form?: {
@@ -22,6 +24,7 @@ export type PulsesActionState = {
     status?: string;
     dueDate?: string;
     assigneeIds?: string[];
+    priority?: Priority;
   };
   errors?: {
     title?: string[];

@@ -10,12 +10,7 @@ import {
   Cell,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const statusColors: Record<string, string> = {
-  active: "#22c55e",
-  completed: "#3b82f6",
-  archived: "#9ca3af",
-};
+import { statusChartColor } from "@/lib/utils/pulse";
 
 type Props = {
   data: { status: string; count: number }[];
@@ -41,7 +36,7 @@ export function PulsesChart({ data }: Props) {
               {data.map((entry) => (
                 <Cell
                   key={entry.status}
-                  fill={statusColors[entry.status] ?? "#6366f1"}
+                  fill={statusChartColor[entry.status] ?? "#6366f1"}
                 />
               ))}
             </Bar>
