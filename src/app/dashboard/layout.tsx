@@ -1,6 +1,5 @@
 import { Dashboard } from "@/components/dashboard/layout";
-import { getCurrentUser } from "@/lib/auth";
-import { getUserOrganization } from "@/lib/organizations";
+import { getCurrentUserWithOrg, getUserOrgs } from "@/lib/organizations";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
@@ -11,23 +10,30 @@ export default async function DashboardLayout({
   children: React.ReactNode;
   modal: React.ReactNode;
 }) {
-  const user = await getCurrentUser();
-  const orgId = await getUserOrganization(String(user?.id));
-  if (!orgId) redirect("/create-organization");
+  const [ctx, orgs] = await Promise.all([
+    getCurrentUserWithOrg(),
+    getUserOrgs(),
+  ]);
+
+  if (!ctx) redirect("/sign-in");
+  if (!ctx.orgId) redirect("/create-organization");
 
   const initials =
-    user?.name
+    ctx.user.name
       ?.split(" ")
       .map((n: string) => n[0])
       .join("")
       .toUpperCase()
       .slice(0, 2) ?? "?";
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Dashboard
-        name={user?.name ?? "User"}
-        email={user?.email ?? ""}
+        name={ctx.user.name ?? "User"}
+        email={ctx.user.email ?? ""}
         initials={initials}
+        orgs={orgs}
+        currentOrgId={ctx.orgId}
       >
         {children}
       </Dashboard>

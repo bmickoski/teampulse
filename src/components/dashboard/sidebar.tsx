@@ -7,21 +7,35 @@ import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useUser } from "@/context/user-context";
 import { NotificationBell } from "./notification-bell";
+import { OrgSwitcher } from "./organization-switch";
 
-export function Sidebar() {
+type Org = { orgId: string; name: string; role: string };
+
+export function Sidebar({
+  orgs,
+  currentOrgId,
+}: {
+  orgs: Org[];
+  currentOrgId: string;
+}) {
   const isCollapsed = useSidebarStore((state) => state.isCollapsed);
   const user = useUser();
   return (
     <aside
       className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 flex flex-col transition-all duration-200 ${isCollapsed ? "w-16" : "w-64"}`}
     >
-      <div className="px-5 py-4 flex items-center justify-center">
+      <div className="px-5 py-4 flex flex-col gap-1">
         {isCollapsed ? (
-          <span className="font-bold text-lg text-indigo-600">T</span>
-        ) : (
-          <span className="font-bold text-lg tracking-tight text-indigo-600">
-            TeamPulse
+          <span className="font-bold text-lg text-indigo-600 text-center">
+            T
           </span>
+        ) : (
+          <>
+            <span className="font-bold text-lg tracking-tight text-indigo-600">
+              TeamPulse
+            </span>
+            <OrgSwitcher orgs={orgs} currentOrgId={currentOrgId} />
+          </>
         )}
       </div>
       <Separator />
@@ -37,7 +51,9 @@ export function Sidebar() {
         </Avatar>
         {!isCollapsed && (
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {user.name}
+            </p>
             <p className="text-xs text-gray-500 truncate">{user.email}</p>
           </div>
         )}

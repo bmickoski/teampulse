@@ -14,6 +14,9 @@ export const usersTable = pgTable("users", {
   email: text("email").notNull().unique(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   passwordHash: text("password_hash"),
+  activeOrgId: uuid("active_org_id").references(() => organizationsTable.id, {
+    onDelete: "set null",
+  }),
   dashboardLayout: jsonb("dashboard_layout").$type<string[]>(),
 });
 

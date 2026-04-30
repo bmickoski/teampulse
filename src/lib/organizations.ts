@@ -3,6 +3,24 @@ import { membershipsTable, organizationsTable, usersTable } from "@/db/schema";
 import { count, eq } from "drizzle-orm";
 import { getCurrentUser } from "./auth";
 
+export async function getUserOrgs() {
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  return db
+    .select({
+      orgId: organizationsTable.id,
+      name: organizationsTable.name,
+      role: membershipsTable.role,
+    })
+    .from(membershipsTable)
+    .innerJoin(
+      organizationsTable,
+      eq(membershipsTable.organizationId, organizationsTable.id),
+    )
+    .where(eq(membershipsTable.userId, String(user.id)));
+}
+
 export async function getUserOrganization(userId: string) {
   const memberships = await db
     .select()
@@ -26,18 +44,30 @@ export async function getCurrentUserWithOrg() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const memberships = await db
-    .select()
-    .from(membershipsTable)
-    .where(eq(membershipsTable.userId, String(user.id)));
+  const [userRow, memberships] = await Promise.all([
+    db
+      .select({ activeOrgId: usersTable.activeOrgId })
+      .from(usersTable)
+      .where(eq(usersTable.id, String(user.id)))
+      .then((r) => r[0]),
+    db
+      .select()
+      .from(membershipsTable)
+      .where(eq(membershipsTable.userId, String(user.id))),
+  ]);
 
-  // prefer invited (member) membership over own org (owner)
   const membership =
-    memberships.find((m) => m.role !== "owner") ?? memberships[0];
+    memberships.find((m) => m.organizationId === userRow?.activeOrgId) ??
+    memberships.find((m) => m.role !== "owner") ??
+    memberships[0];
 
   if (!membership) return null;
 
-  return { user, orgId: membership.organizationId, role: membership.role as "owner" | "member" };
+  return {
+    user,
+    orgId: membership.organizationId,
+    role: membership.role as "owner" | "member",
+  };
 }
 
 export async function getOrgMemberCount(orgId: string) {
