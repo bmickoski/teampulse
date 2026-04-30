@@ -50,8 +50,9 @@ async function main() {
       } catch (err: unknown) {
         await client.query("ROLLBACK");
         const pgErr = err as { code?: string };
-        if (pgErr.code === "42P07") {
-          // Table already exists — baseline this migration as applied
+        const alreadyExists = ["42P07", "42701", "42710"].includes(pgErr.code ?? "");
+        if (alreadyExists) {
+          // Object already exists — baseline this migration as applied
           await client.query(
             `INSERT INTO "__drizzle_migrations" (hash, created_at) VALUES ($1, $2)`,
             [hash, Date.now()],
