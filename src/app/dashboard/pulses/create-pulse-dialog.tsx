@@ -8,6 +8,7 @@ import {
   pulsesFormSchema,
   type PulsesFormValues,
 } from "@/lib/validations/pulses";
+import { type Priority } from "@/lib/types";
 import {
   Dialog,
   DialogContent,
@@ -26,17 +27,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PULSE_TEMPLATES } from "@/lib/pulse-templates";
 
 export function CreatePulseDialog() {
   const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const [selectedTemplate, setSelectedTemplate] = useState("");
 
   const {
     register,
     handleSubmit,
     control,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<PulsesFormValues>({
     resolver: zodResolver(pulsesFormSchema),
@@ -48,8 +52,31 @@ export function CreatePulseDialog() {
     if (!next) {
       reset();
       setServerError(null);
+      setSelectedTemplate("");
     }
   }
+
+  const onDefaultTemplate = (templateId: string | null) => {
+    const template = PULSE_TEMPLATES.find((item) => item.id === templateId);
+
+    if (template) {
+      setSelectedTemplate(template.id);
+      setValue("title", template.title, { shouldDirty: true });
+      setValue("description", template.description, { shouldDirty: true });
+      setValue("priority", template.priority as Priority, {
+        shouldDirty: true,
+      });
+      setValue("status", template.status, { shouldDirty: true });
+    } else {
+      setSelectedTemplate("");
+      setValue("title", "", { shouldDirty: true });
+      setValue("description", "", { shouldDirty: true });
+      setValue("priority", "medium", {
+        shouldDirty: true,
+      });
+      setValue("status", "active", { shouldDirty: true });
+    }
+  };
 
   const onSubmit = async (data: PulsesFormValues) => {
     const formData = new FormData();
@@ -77,6 +104,22 @@ export function CreatePulseDialog() {
           <DialogHeader>
             <DialogTitle>Create a new Pulse</DialogTitle>
           </DialogHeader>
+
+          <div className="space-y-1.5">
+            <Select value={selectedTemplate} onValueChange={onDefaultTemplate}>
+              <SelectTrigger id="template" className="w-full">
+                <SelectValue placeholder="Choose predefined template" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No template</SelectItem>
+                {PULSE_TEMPLATES.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    {template.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
             <div className="space-y-1.5">
@@ -114,9 +157,7 @@ export function CreatePulseDialog() {
               </Label>
               <Input id="dueDate" type="date" {...register("dueDate")} />
               {errors.dueDate && (
-                <p className="text-xs text-red-600">
-                  {errors.dueDate.message}
-                </p>
+                <p className="text-xs text-red-600">{errors.dueDate.message}</p>
               )}
             </div>
 
@@ -127,7 +168,10 @@ export function CreatePulseDialog() {
                 name="priority"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="priority" className="w-full sm:w-[180px]">
+                    <SelectTrigger
+                      id="priority"
+                      className="w-full sm:w-[180px]"
+                    >
                       <SelectValue placeholder="Choose priority" />
                     </SelectTrigger>
                     <SelectContent>
