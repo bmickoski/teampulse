@@ -3,7 +3,7 @@ import { useSidebarStore } from "@/lib/stores/sidebar";
 import { Sidebar } from "./sidebar";
 import { PropsWithChildren, useEffect } from "react";
 import { UserContext } from "../../../src/context/user-context";
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { useSearchStore } from "@/lib/stores/search";
 import { SearchModal } from "./search-modal";
 
@@ -57,6 +57,12 @@ export function Dashboard({
               <Menu size={20} />
             </button>
             <span className="font-bold text-indigo-600">TeamPulse</span>
+            <button
+              onClick={openSearch}
+              className="ml-auto p-2 rounded-md text-gray-500 hover:bg-gray-100 transition-colors"
+            >
+              <Search size={18} />
+            </button>
           </div>
           {children}
         </main>
