@@ -42,6 +42,7 @@ type PulsesPage = {
   pulses: Pulse[];
   hasMore: boolean;
   page: number;
+  total: number;
 };
 
 async function fetchPulses(
@@ -66,10 +67,12 @@ export default function PulsesList({
   initialData,
   members,
   role,
+  total,
 }: {
   initialData: Pulse[];
   members: Member[] | null;
   role: "owner" | "member";
+  total: number;
 }) {
   const router = useRouter();
   const [status, setStatus] = useQueryState(
@@ -97,12 +100,20 @@ export default function PulsesList({
       getNextPageParam: (lastPage) =>
         lastPage.hasMore ? lastPage.page + 1 : undefined,
       initialData: {
-        pages: [{ pulses: initialData, hasMore: false, page: 1 }],
+        pages: [
+          {
+            pulses: initialData,
+            hasMore: initialData.length < total,
+            page: 1,
+            total: total,
+          },
+        ],
         pageParams: [1],
       },
     });
 
   const pulses = data.pages.flatMap((p) => p.pulses);
+  const totalPulses = data.pages[0]?.total ?? pulses.length;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -110,7 +121,7 @@ export default function PulsesList({
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Pulses</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {pulses.length} pulse{pulses.length !== 1 ? "s" : ""} in your
+            {totalPulses} pulse{totalPulses !== 1 ? "s" : ""} in your
             organization
           </p>
         </div>
@@ -149,7 +160,9 @@ export default function PulsesList({
         >
           <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="Priority">
-              {priority === "all" ? "Any priority" : formatFilterLabel(priority)}
+              {priority === "all"
+                ? "Any priority"
+                : formatFilterLabel(priority)}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>

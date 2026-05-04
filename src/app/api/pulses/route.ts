@@ -111,5 +111,10 @@ export async function GET(request: Request) {
     );
 
   const hasMore = page * PAGE_SIZE < total;
-  return NextResponse.json({ pulses: pulsesWithAssignees, hasMore, page });
+  return NextResponse.json({
+    pulses: pulsesWithAssignees,
+    hasMore,
+    page,
+    total,
+  });
 }
