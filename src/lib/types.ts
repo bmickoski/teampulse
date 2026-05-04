@@ -26,7 +26,8 @@ export type NotificationType =
   | "general"
   | "comment"
   | "mention"
-  | "assignment";
+  | "assignment"
+  | "status_change";
 
 export type Member = {
   userId: string;

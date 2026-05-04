@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ArrowRightLeft,
   AtSign,
   Bell,
   CheckCheck,
@@ -37,6 +38,7 @@ function getNotificationIcon(type: Notification["type"]) {
   if (type === "mention") return AtSign;
   if (type === "comment") return MessageSquare;
   if (type === "assignment") return UserCheck;
+  if (type === "status_change") return ArrowRightLeft;
   return Bell;
 }
 
@@ -98,13 +100,9 @@ export function NotificationBell() {
         <div className="absolute bottom-10 left-0 w-72 sm:w-80 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
           <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-100">
             <div>
-              <p className="text-sm font-medium text-gray-700">
-                Notifications
-              </p>
+              <p className="text-sm font-medium text-gray-700">Notifications</p>
               {unreadCount > 0 && (
-                <p className="text-xs text-gray-400">
-                  {unreadCount} unread
-                </p>
+                <p className="text-xs text-gray-400">{unreadCount} unread</p>
               )}
             </div>
             {unreadCount > 0 && (
@@ -146,9 +144,7 @@ export function NotificationBell() {
                         <Icon size={15} />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-gray-700">
-                          {n.message}
-                        </span>
+                        <span className="block text-gray-700">{n.message}</span>
                         <span className="mt-0.5 block text-xs text-gray-400">
                           {relativeTime(n.createdAt)}
                         </span>

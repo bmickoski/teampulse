@@ -143,7 +143,12 @@ export async function pulseEditAction(
 
   try {
     const [pulse] = await db
-      .select({ id: pulsesTable.id })
+      .select({
+        id: pulsesTable.id,
+        status: pulsesTable.status,
+        createdById: pulsesTable.createdById,
+        title: pulsesTable.title,
+      })
       .from(pulsesTable)
       .where(
         and(
@@ -154,8 +159,9 @@ export async function pulseEditAction(
       );
 
     if (!pulse) return { error: "Pulse not found" };
-
-    const requestedUserIds = [...new Set(formData.getAll("userId") as string[])];
+    const requestedUserIds = [
+      ...new Set(formData.getAll("userId") as string[]),
+    ];
     const validAssignees =
       requestedUserIds.length > 0
         ? await db
@@ -190,6 +196,19 @@ export async function pulseEditAction(
           isNull(pulsesTable.deletedAt),
         ),
       );
+
+    if (pulse.status !== status) {
+      const statusNotifyIds = [
+        ...new Set([...userIds, pulse.createdById]),
+      ].filter((id): id is string => !!id && id !== ctx.user.id);
+
+      await createNotifications(
+        statusNotifyIds,
+        `${ctx.user.name} moved "${title}" to ${status}`,
+        pulseId,
+        "status_change",
+      );
+    }
 
     await db.insert(activityLogsTable).values({
       action: "pulse_updated",
