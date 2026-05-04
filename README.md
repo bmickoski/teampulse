@@ -1,109 +1,56 @@
 # TeamPulse
 
-A team productivity SaaS dashboard built with Next.js 15 and React 19. Manage projects, track progress, and keep your team in sync.
-
-**Live demo:** https://teampulse-ecru-sigma.vercel.app
+A team task management app built with Next.js 16 and React 19. Organizations create and track work items called pulses, assign them to team members, and collaborate through comments.
 
 ## Features
 
-- **Authentication** - email/password sign-up and sign-in with NextAuth v5
-- **Organizations** - create an org, invite team members, manage roles (owner/member)
-- **Pulses** - create and track projects with status (active, completed, archived)
-- **Pulse detail** - full history of changes per pulse with activity log
-- **Real-time activity feed** - live updates via Server-Sent Events (SSE)
-- **Role-based access** - owners can manage team and org settings, members have read access
-- **Pagination** - infinite scroll on pulses list with URL-based status filtering
+- Pulse management with status, priority, due dates, and assignees
+- @mentions in comments with in-app and email notifications
+- Real-time activity feed via SSE
+- Notification center with per-type icons and mark-all-read
+- Global search with Cmd+K
+- Dashboard with charts (pulses by status, member workload, creation over time)
+- Multi-org support with org switching
+- Invite members by email or shareable invite link
+- Role-based access (owner vs member)
 
 ## Tech Stack
 
-| Category | Technology |
-|---|---|
-| Framework | Next.js 15 (App Router, Turbopack) |
-| Language | TypeScript |
-| Database | Neon (PostgreSQL, serverless) |
-| ORM | Drizzle ORM |
-| Auth | NextAuth v5 (JWT) |
-| Styling | Tailwind CSS v4, shadcn/ui |
-| Forms | React Hook Form + Zod |
-| Server state | TanStack React Query v5 |
-| Client state | Zustand |
-| URL state | nuqs |
-| Charts | Recharts |
-| Toasts | Sonner |
-| Testing | Vitest, React Testing Library |
+- **Framework:** Next.js 16 (App Router)
+- **Database:** PostgreSQL on Neon, Drizzle ORM
+- **Auth:** NextAuth v5 (credentials)
+- **Styling:** Tailwind CSS v4, shadcn/ui
+- **State:** Zustand, TanStack Query
+- **Email:** Resend
+- **Testing:** Vitest, React Testing Library
 
-## Architecture highlights
-
-- **App Router** with nested layouts, parallel routes, and intercepting routes (modal pattern)
-- **Server Components** for data fetching with Suspense streaming
-- **Server Actions** for mutations with two-layer validation (client + server)
-- **Optimistic UI** with React Query cache invalidation
-- **Role-based middleware** - edge-level redirects + server action guards + UI gating
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- A [Neon](https://neon.tech) database
-
-### Setup
+## Running locally
 
 ```bash
-git clone https://github.com/your-username/teampulse
-cd teampulse
 npm install
 ```
 
-Copy the environment variables file and fill in your values:
+Create `.env.local`:
 
-```bash
-cp .env.example .env.local
+```
+DATABASE_URL=
+DIRECT_DATABASE_URL=
+NEXTAUTH_SECRET=
+RESEND_API_KEY=
 ```
 
-```env
-DATABASE_URL=        # Neon connection string
-AUTH_SECRET=         # Random secret (run: openssl rand -hex 32)
-```
-
-Push the database schema:
-
-```bash
-npx drizzle-kit push
-```
-
-Run the development server:
+`DATABASE_URL` is the pooled Neon connection string. `DIRECT_DATABASE_URL` is the direct (non-pooled) connection used for migrations.
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
-
-### Running tests
+Migrations run automatically on `npm run build` via a `postbuild` script. For local development run:
 
 ```bash
-npm test          # watch mode
-npm test -- --run # single run
+npx drizzle-kit push
 ```
 
-## Project structure
+## Deployment
 
-```
-src/
-  app/                  # Next.js App Router pages
-    (auth)/             # Sign-in, sign-up
-    dashboard/          # Protected dashboard
-      @modal/           # Parallel route for pulse detail modal
-      pulses/           # Pulses list + detail page
-      team/             # Team management
-      settings/         # Profile + org settings
-  components/           # Shared UI components
-  context/              # React Context (user context)
-  db/                   # Drizzle schema and client
-  lib/
-    actions/            # Server actions
-    validations/        # Zod schemas
-    utils/              # Pure utility functions
-  test/                 # Vitest tests
-```
+Deployed on Vercel. Production database is a separate Neon branch from development. Migrations apply automatically on each production build.
