@@ -81,6 +81,14 @@ export function NotificationBell() {
     if (n.pulseId) router.push(`/dashboard/pulses/${n.pulseId}`);
   };
 
+  const prevUnreadRef = useRef(unreadCount);
+  useEffect(() => {
+    if (unreadCount > prevUnreadRef.current) {
+      router.refresh();
+    }
+    prevUnreadRef.current = unreadCount;
+  }, [unreadCount, router]);
+
   return (
     <div ref={ref} className="relative">
       <button

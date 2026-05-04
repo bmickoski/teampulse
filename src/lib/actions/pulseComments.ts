@@ -14,10 +14,12 @@ import {
   pulseCommentMentionsTable,
   pulseCommentsTable,
   pulsesTable,
+  usersTable,
 } from "@/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { createNotifications } from "../notifications";
+import { sendMentionEmail } from "../email";
 
 export async function createPulseComment(
   _prev: PulseCommentActionState,
@@ -57,8 +59,9 @@ export async function createPulseComment(
   const validMentionedUsers =
     requestedMentionIds.length > 0
       ? await db
-          .select({ userId: membershipsTable.userId })
+          .select({ userId: membershipsTable.userId, email: usersTable.email })
           .from(membershipsTable)
+          .innerJoin(usersTable, eq(usersTable.id, membershipsTable.userId))
           .where(
             and(
               eq(membershipsTable.organizationId, ctx.orgId),
@@ -84,6 +87,13 @@ export async function createPulseComment(
         userId,
       })),
     );
+    for (const user of validMentionedUsers) {
+      try {
+        await sendMentionEmail(user.email, ctx.user.name, pulse.title, content);
+      } catch {
+        // email failure should never block the comment
+      }
+    }
   }
 
   await db.insert(activityLogsTable).values({

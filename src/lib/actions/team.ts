@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUserWithOrg } from "../organizations";
 import { and, eq } from "drizzle-orm";
 import { TeamActionState, inviteTeamMemberSchema } from "../validations/team";
+import { createNotifications } from "../notifications";
 
 export async function inviteMemberAction(
   _prev: TeamActionState,
@@ -69,6 +70,13 @@ export async function inviteMemberAction(
       userId: userByEmail.id,
       organizationId: orgId,
     });
+    await createNotifications(
+      [userByEmail.id],
+      `You were added to the organization`,
+      undefined,
+      "general",
+    );
+
     await db.insert(activityLogsTable).values({
       action: "member_invited",
       message: `Member "${userByEmail.name}" was invited to the organization`,
