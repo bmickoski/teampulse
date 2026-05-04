@@ -17,6 +17,7 @@ import { db } from "@/db";
 import { usersTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { DashboardLayoutPicker } from "@/components/dashboard/dashboard-layout-picker";
+import { OnboardingWrapper } from "@/components/dashboard/onboarding-wraper";
 
 export const metadata = { title: "Dashboard" };
 
@@ -113,6 +114,13 @@ function ChartSkeleton() {
 
 export default async function DashboardPage() {
   const ctx = await getCurrentUserWithOrg();
+  const [statusCounts, memberCount] = await Promise.all([
+    getStatusCounts(),
+    ctx?.orgId ? getOrgMemberCount(ctx.orgId) : Promise.resolve(0),
+  ]);
+  const hasPulse = statusCounts.some((s) => s.count > 0);
+  const hasMember = memberCount > 1;
+
   const user = ctx?.user;
   const userRow = ctx
     ? await db
@@ -133,7 +141,13 @@ export default async function DashboardPage() {
           {"Here's what's happening with your team today."}
         </p>
       </div>
-
+      {ctx && (
+        <OnboardingWrapper
+          orgId={ctx.orgId}
+          hasPulse={hasPulse}
+          hasMember={hasMember}
+        />
+      )}
       <Suspense fallback={<StatsSkeleton />}>
         <DashboardStats />
       </Suspense>
@@ -144,7 +158,8 @@ export default async function DashboardPage() {
         <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-gray-200 rounded-xl">
           <p className="text-sm text-gray-400">No charts selected</p>
           <p className="text-xs text-gray-400 mt-1">
-            Click <span className="font-medium text-gray-500">Customize</span> to configure your dashboard
+            Click <span className="font-medium text-gray-500">Customize</span>{" "}
+            to configure your dashboard
           </p>
         </div>
       ) : (
