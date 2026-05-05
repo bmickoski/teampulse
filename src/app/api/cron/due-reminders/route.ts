@@ -34,13 +34,13 @@ export async function GET(request: Request) {
     );
 
   for (const pulse of pulses) {
-    const assigness = await db
+    const assignees = await db
       .select({ userId: pulseAssignmentsTable.userId })
       .from(pulseAssignmentsTable)
-      .where(eq(pulseAssignmentsTable.id, pulse.id));
+      .where(eq(pulseAssignmentsTable.pulseId, pulse.id));
 
     const recipientIds = [
-      ...assigness.map((a) => a.userId),
+      ...assignees.map((a) => a.userId),
       pulse.createdById,
     ].filter((id): id is string => !!id);
 

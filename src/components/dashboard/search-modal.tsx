@@ -53,11 +53,16 @@ export function SearchModal({
     }
     const timer = setTimeout(async () => {
       setLoading(true);
-      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      setResults(data.pulses);
-      setActiveIndex(0);
-      setLoading(false);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        setResults(data.pulses);
+        setActiveIndex(0);
+      } catch {
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
     }, 200);
     return () => clearTimeout(timer);
   }, [query]);
